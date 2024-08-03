@@ -1,0 +1,50 @@
+import path from "path";
+import { app, clipboard, ipcMain } from "electron";
+import serve from "electron-serve";
+import { createWindow } from "./helpers";
+
+const isProd = process.env.NODE_ENV === "production";
+
+if (isProd) {
+  serve({ directory: "app" });
+} else {
+  app.setPath("userData", `${app.getPath("userData")} (development)`);
+}
+
+(async () => {
+  await app.whenReady();
+
+  const mainWindow = createWindow("main", {
+    width: 1000,
+    height: 600,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+    },
+  });
+
+  if (isProd) {
+    await mainWindow.loadURL("app://./");
+  } else {
+    const port = process.argv[2];
+    await mainWindow.loadURL(`http://localhost:${port}/`);
+    mainWindow.webContents.openDevTools();
+  }
+})();
+
+app.on("window-all-closed", () => {
+  app.quit();
+});
+
+ipcMain.on("message", async (event, arg) => {
+  event.reply("message", {
+    arg: arg,
+    text: clipboard.readText(),
+    html: clipboard.readHTML(),
+    bookmark: clipboard.readBookmark(),
+    img: clipboard.readImage(),
+    rtf: clipboard.readRTF(),
+    file: clipboard.read('public.file-url'),
+    url: clipboard.read('public.url'),
+    // buffer: clipboard.readBuffer(),
+  });
+});
