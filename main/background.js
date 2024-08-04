@@ -1,5 +1,5 @@
 import path from "path";
-import { app, ipcMain, globalShortcut } from "electron";
+import { app, ipcMain, globalShortcut, Menu } from "electron";
 import serve from "electron-serve";
 import { createWindow } from "./helpers";
 import { readClipboard } from "./utils/clipboard";
@@ -23,6 +23,7 @@ if (isProd) {
   const mainWindow = createWindow("main", {
     width: 1000,
     height: 600,
+    frame: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
