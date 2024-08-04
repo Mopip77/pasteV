@@ -1,5 +1,5 @@
 import path from "path";
-import { app, ipcMain } from "electron";
+import { app, ipcMain, globalShortcut } from "electron";
 import serve from "electron-serve";
 import { createWindow } from "./helpers";
 import { readClipboard } from "./utils/clipboard";
@@ -35,6 +35,23 @@ if (isProd) {
     await mainWindow.loadURL(`http://localhost:${port}/`);
     mainWindow.webContents.openDevTools();
   }
+
+  mainWindow.on("blur", () => {
+    mainWindow.hide();
+  });
+
+  mainWindow.on("closed", () => {
+    mainWindow = null;
+  });
+
+  globalShortcut.register("CommandOrControl+Shift+H", () => {
+    if (mainWindow.isVisible()) {
+      mainWindow.hide();
+    } else {
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
 })();
 
 app.on("window-all-closed", () => {
