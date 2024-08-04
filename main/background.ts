@@ -1,10 +1,10 @@
 import path from "path";
 import { app, ipcMain, globalShortcut, Menu } from "electron";
 import serve from "electron-serve";
-import { createWindow } from "./helpers";
 import { readClipboard } from "./utils/clipboard";
 import { startReadingClipboardDaemon } from "./helpers/read-clipboard-daemon";
 import { initSingletons } from "./components/singletons";
+import createWindow from "./helpers/create-window";
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -37,13 +37,11 @@ if (isProd) {
     mainWindow.webContents.openDevTools();
   }
 
-  mainWindow.on("blur", () => {
-    mainWindow.hide();
-  });
-
-  mainWindow.on("closed", () => {
-    mainWindow = null;
-  });
+  if (isProd) {
+    mainWindow.on("blur", () => {
+      mainWindow.hide();
+    });
+  }
 
   globalShortcut.register("CommandOrControl+Shift+H", () => {
     if (mainWindow.isVisible()) {
