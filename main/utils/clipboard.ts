@@ -1,4 +1,5 @@
 import { clipboard } from "electron";
+import crypto from 'crypto'
 
 interface ClipboardData {
     type: 'text' | 'file' | 'image'
@@ -27,4 +28,20 @@ export const readClipboard = (): ClipboardData => {
         type: 'text',
         text: clipboard.readText()
     }
+}
+
+export const generateHashKey = (data: ClipboardData) : string => {
+    const hash = crypto.createHash('md5');
+    hash.update(data.type);
+
+    switch (data.type) {
+        case "text":
+        case "file":
+            hash.update(data.text!)
+            break
+        case "image":
+            hash.update(data.blob!)
+            break
+    }
+    return hash.digest('hex');
 }

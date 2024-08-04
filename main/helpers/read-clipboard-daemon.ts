@@ -1,5 +1,5 @@
-import { readClipboard } from "../utils/clipboard"
-import { db } from '../components/singletons'
+import { generateHashKey, readClipboard } from "../utils/clipboard"
+import { cache } from '../components/singletons'
 import { ClipboardHisotryEntity } from "../db/schemes";
 
 export const startReadingClipboardDaemon = () => {
@@ -7,23 +7,27 @@ export const startReadingClipboardDaemon = () => {
         const clipboardData = readClipboard();
         const now = new Date().toISOString();
 
+        let text : string = ''
+        let blob : Buffer | undefined = undefined
+        switch (clipboardData.type) {
+            case "text":
+            case "file":
+                text = clipboardData.text || ''
+                break
+            case "image":
+                blob = clipboardData.blob!
+                break
+        }
+
         const entity: ClipboardHisotryEntity = {
             type: clipboardData.type,
-            text: '',
+            text: text,
+            blob: blob,
+            hashKey: generateHashKey(clipboardData),
             createTime: now,
             lastReadTime: now
         }
 
-        switch (clipboardData.type) {
-            case "text":
-            case "file":
-                entity.text = clipboardData.text || ''
-                break
-            case "image":
-                entity.blob = clipboardData.blob!
-                break
-        }
-
-        db.insertClipboardHistory(entity)
+        cache.add(entity)
     }, 5000)
 }

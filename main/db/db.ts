@@ -27,22 +27,28 @@ class DatabaseManager {
                 type TEXT NOT NULL,
                 text TEXT,
                 blob BLOB,
+                hash_key TEXT,
                 create_time DATETIME NOT NULL,
                 last_read_time DATETIME NOT NULL
             );
+
+            CREATE INDEX idx_hash_key ON clipboard_history(hash_key);
+            CREATE INDEX idx_last_read_time ON clipboard_history(last_read_time);
+            CREATE INDEX idx_type_text ON clipboard_history(type, text);
         `)
     }
 
     public insertClipboardHistory(entity: ClipboardHisotryEntity) {
         const insert = this.db.prepare(`
-            INSERT INTO clipboard_history (type, text, blob, create_time, last_read_time)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO clipboard_history (type, text, blob, hash_key, create_time, last_read_time)
+            VALUES (?, ?, ?, ?, ?, ?)
           `);
 
         insert.run(
             entity.type,
             entity.text,
             entity.blob,
+            entity.hashKey,
             entity.createTime,
             entity.lastReadTime
         );
@@ -50,23 +56,32 @@ class DatabaseManager {
 
     public listClipboardHistory(query: ListClipboardHistoryQuery): ClipboardHisotryEntity[] {
         const querySql = this.db.prepare(`
-            SELECT id, type, text, blob, create_time, last_read_time
+            SELECT id, type, text, blob, hash_key, create_time, last_read_time
             FROM clipboard_history
-            ORDER BY id DESC
+            ORDER BY last_read_time DESC
             LIMIT ?
           `);
 
-        const result = querySql.all(query.size);
-        console.debug("listClipboardHistory result, ", result)
-
-        return result.map(row => ({
+        return querySql.all(query.size).map(row => ({
             id: row.id,
             type: row.type,
             text: row.text,
             blob: row.blob,
+            hashKey: row.hash_key,
             createTime: row.create_time,
             lastReadTime: row.last_read_time
         }))
+    }
+
+    public updateClipboardHistoryLastReadTime(hashKey: string, lastReadTime: string) {
+        const sql = this.db.prepare(`
+            UPDATE clipboard_history SET last_read_time = ? WHERE hash_key = ?
+            `);
+
+        sql.run(
+            lastReadTime,
+            hashKey
+        )
     }
 
 }
