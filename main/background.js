@@ -4,7 +4,7 @@ import serve from "electron-serve";
 import { createWindow } from "./helpers";
 import { readClipboard } from "./utils/clipboard";
 import { startReadingClipboardDaemon } from "./helpers/read-clipboard-daemon";
-import { db } from './components/singletons'
+import { initSingletons } from "./components/singletons";
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -15,7 +15,7 @@ if (isProd) {
 }
 
 (async () => {
-  db.init();
+  initSingletons();
   startReadingClipboardDaemon();
 
   await app.whenReady();

@@ -1,5 +1,12 @@
 import DatabaseManager from "../db/db";
+import ClipboardMemoCache from "./clipboardMemoCache";
 
 const db = new DatabaseManager();
+const cache = new ClipboardMemoCache();
 
-export { db }
+export const initSingletons = () => {
+    db.init();
+    cache.init();
+}
+
+export { db, cache }

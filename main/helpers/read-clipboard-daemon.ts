@@ -1,5 +1,6 @@
 import { readClipboard } from "../utils/clipboard"
 import { db } from '../components/singletons'
+import { ClipboardHisotryEntity } from "../db/schemes";
 
 export const startReadingClipboardDaemon = () => {
     setInterval(() => {

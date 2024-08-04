@@ -1,6 +1,7 @@
 import { join } from 'node:path'
 import { app } from "electron";
 import Database from 'better-sqlite3/lib/database';
+import { ClipboardHisotryEntity, ListClipboardHistoryQuery } from './schemes';
 
 class DatabaseManager {
 
@@ -38,16 +39,34 @@ class DatabaseManager {
             VALUES (?, ?, ?, ?, ?)
           `);
 
-        // 执行插入
-        const info = insert.run(
+        insert.run(
             entity.type,
             entity.text,
             entity.blob,
             entity.createTime,
             entity.lastReadTime
         );
+    }
 
-        console.log('Inserted row id:', info.lastInsertRowid);
+    public listClipboardHistory(query: ListClipboardHistoryQuery): ClipboardHisotryEntity[] {
+        const querySql = this.db.prepare(`
+            SELECT id, type, text, blob, create_time, last_read_time
+            FROM clipboard_history
+            ORDER BY id DESC
+            LIMIT ?
+          `);
+
+        const result = querySql.all(query.size);
+        console.debug("listClipboardHistory result, ", result)
+
+        return result.map(row => ({
+            id: row.id,
+            type: row.type,
+            text: row.text,
+            blob: row.blob,
+            createTime: row.create_time,
+            lastReadTime: row.last_read_time
+        }))
     }
 
 }
