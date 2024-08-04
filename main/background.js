@@ -1,7 +1,10 @@
 import path from "path";
-import { app, clipboard, ipcMain } from "electron";
+import { app, ipcMain } from "electron";
 import serve from "electron-serve";
 import { createWindow } from "./helpers";
+import { readClipboard } from "./utils/clipboard";
+import { startReadingClipboardDaemon } from "./helpers/read-clipboard-daemon";
+import { db } from './components/singletons'
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -12,6 +15,9 @@ if (isProd) {
 }
 
 (async () => {
+  db.init();
+  startReadingClipboardDaemon();
+
   await app.whenReady();
 
   const mainWindow = createWindow("main", {
@@ -35,16 +41,6 @@ app.on("window-all-closed", () => {
   app.quit();
 });
 
-ipcMain.on("message", async (event, arg) => {
-  event.reply("message", {
-    arg: arg,
-    text: clipboard.readText(),
-    html: clipboard.readHTML(),
-    bookmark: clipboard.readBookmark(),
-    img: clipboard.readImage(),
-    rtf: clipboard.readRTF(),
-    file: clipboard.read('public.file-url'),
-    url: clipboard.read('public.url'),
-    // buffer: clipboard.readBuffer(),
-  });
+ipcMain.on("message", async (event) => {
+  event.reply("message", readClipboard());
 });

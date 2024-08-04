@@ -33,35 +33,15 @@ export default function HomePage() {
       <div>
         <button
           onClick={() => {
-            window.ipc.send("message", "Hello");
+            window.ipc.send("message");
           }}
         >
           Test IPC
         </button>
         <div>
           <div className="flex gap-9 border-b-2 border-b-gray-500">
-            <div>text</div>
-            <div>{message.text}</div>
-          </div>
-          <div className="flex gap-9 border-b-2 border-b-gray-500">
-            <div>html</div>
-            <div>{message.html}</div>
-          </div>
-          <div className="flex gap-9 border-b-2 border-b-gray-500">
-            <div>rtf</div>
-            <div>{message.rtf}</div>
-          </div>
-          <div className="flex gap-9 border-b-2 border-b-gray-500">
-            <div>url</div>
-            <div>{message.url}</div>
-          </div>
-          <div className="flex gap-9 border-b-2 border-b-gray-500">
-            <div>file</div>
-            <div>{message.file}</div>
-          </div>
-          <div className="flex gap-9 border-b-2 border-b-gray-500">
-            <div>img</div>
-            <div>{message.img?.isEmpty().toString()}</div>
+            <div>{message.type}</div>
+            <div>{message.data}</div>
           </div>
         </div>
       </div>
