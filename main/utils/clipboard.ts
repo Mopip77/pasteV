@@ -2,7 +2,8 @@ import { clipboard } from "electron";
 
 interface ClipboardData {
     type: 'text' | 'file' | 'image'
-    data: string
+    text?: string
+    blob?: Buffer
 }
 
 export const readClipboard = (): ClipboardData => {
@@ -10,7 +11,7 @@ export const readClipboard = (): ClipboardData => {
     if (!img?.isEmpty()) {
         return {
             type: 'image',
-            data: img.toDataURL()
+            blob: img.toPNG()
         }
     }
 
@@ -18,12 +19,12 @@ export const readClipboard = (): ClipboardData => {
     if (file) {
         return {
             type: 'file',
-            data: file
+            text: file
         }
     }
 
     return {
         type: 'text',
-        data: clipboard.readText()
+        text: clipboard.readText()
     }
 }

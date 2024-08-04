@@ -32,6 +32,24 @@ class DatabaseManager {
         `)
     }
 
+    public insertClipboardHistory(entity: ClipboardHisotryEntity) {
+        const insert = this.db.prepare(`
+            INSERT INTO clipboard_history (type, text, blob, create_time, last_read_time)
+            VALUES (?, ?, ?, ?, ?)
+          `);
+
+        // 执行插入
+        const info = insert.run(
+            entity.type,
+            entity.text,
+            entity.blob,
+            entity.createTime,
+            entity.lastReadTime
+        );
+
+        console.log('Inserted row id:', info.lastInsertRowid);
+    }
+
 }
 
 export default DatabaseManager

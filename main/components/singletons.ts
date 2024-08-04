@@ -1,4 +1,4 @@
-import DatabaseManager from "../utils/db";
+import DatabaseManager from "../db/db";
 
 const db = new DatabaseManager();
 
