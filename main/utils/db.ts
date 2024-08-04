@@ -1,17 +1,17 @@
 import { join } from 'node:path'
-import Database from "better-sqlite3/lib/database";
 import { app } from "electron";
+import Database from 'better-sqlite3/lib/database';
 
 class DatabaseManager {
 
-    private db: Database | undefined = undefined
+    private db: Database
 
     constructor() {
     }
 
     public init() {
         const databasePath = join(app.getPath('userData'), 'clipboard.db');
-        console.log('Init database...', databasePath);
+        console.log(`Init database, path=${databasePath}`);
         try {
             this.db = new Database(databasePath, { verbose: console.log });
         } catch (e) {
@@ -21,18 +21,16 @@ class DatabaseManager {
         this.db.pragma('journal_mode = WAL');
 
         this.db.exec(`
-            CREATE TABLE clipboard_history (
-                id BIGINT,
-                type VARCHAR(5),
+            CREATE TABLE IF NOT EXISTS clipboard_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                type TEXT NOT NULL,
                 text TEXT,
                 blob BLOB,
-                create_time TEXT,
-                last_read_time TEXT
+                create_time DATETIME NOT NULL,
+                last_read_time DATETIME NOT NULL
             );
         `)
     }
-
-    public insertClipboard    
 
 }
 
