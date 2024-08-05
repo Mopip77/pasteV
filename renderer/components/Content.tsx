@@ -1,6 +1,6 @@
 "use client";
-import { ClipboardHisotryEntity } from "@/lib/schemes";
-import { useEffect, useState } from "react";
+import { ClipboardHisotryEntity } from '@/lib/schemes';
+import React, { useState, useEffect } from 'react';
 
 interface ClipboardDisplayItem extends ClipboardHisotryEntity {
   displayText: string;
@@ -8,6 +8,7 @@ interface ClipboardDisplayItem extends ClipboardHisotryEntity {
 
 const Content = () => {
   const [histories, setHistories] = useState<ClipboardDisplayItem[]>([]);
+  const [currentDetail, setCurrentDetail] = useState<ClipboardDisplayItem>();
 
   useEffect(() => {
     global.window.ipc
@@ -23,20 +24,36 @@ const Content = () => {
       });
   }, []);
 
+  const renderDetail = () => {
+    if (currentDetail?.type === 'image' && currentDetail.blob) {
+      const base64String = Buffer.from(currentDetail.blob).toString('base64');
+      return <img src={`data:image/png;base64,${base64String}`} alt="Detail" />;
+    } else {
+      return <div>{currentDetail?.text}</div>;
+    }
+  };
+
   return (
-    <div className="divide-x divide-gray-700">
-      <ul className=" w-2/5 divide-y divide-gray-200">
+    <div className="flex divide-x divide-gray-200">
+      <ul className="w-2/5">
         {histories.length > 0 &&
           histories.map((item) => (
             <li
-              className={`py-[4px] first truncate`}
+              key={item.id}
+              className={`py-[4px] truncate ${currentDetail === item ? 'bg-blue-200' : ''}`}
+              onMouseOver={() => {
+                setCurrentDetail(item);
+              }}
+              onClick={() => {
+                setCurrentDetail(item);
+              }}
             >
               ({item.type}){item.displayText}
             </li>
           ))}
       </ul>
-      <div>
-        details
+      <div className="w-3/5">
+        {currentDetail && renderDetail()}
       </div>
     </div>
   );
