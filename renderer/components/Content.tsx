@@ -18,7 +18,7 @@ const Content = () => {
         const displayItems: ClipboardDisplayItem[] = _histories.map(
           (history) => ({
             ...history,
-            displayText: history.type === "image" ? "Image..." : history.text,
+            displayText: generateSummary(history),
           })
         );
         setHistories(displayItems);
@@ -41,6 +41,10 @@ const Content = () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [histories]);
+
+  const generateSummary = (item: ClipboardHisotryEntity): string => {
+    return item.type === "image" ? "Image..." : item.text;
+  };
 
   const renderDetail = (item: ClipboardDisplayItem) => {
     if (item?.type === "image" && item.blob) {
@@ -68,7 +72,7 @@ const Content = () => {
                 setSelectedIndex(index);
               }}
             >
-              ({item.type}){item.displayText}
+              {item.displayText}
             </li>
           ))}
       </ul>

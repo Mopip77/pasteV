@@ -7,9 +7,9 @@ import Content from "@/components/Content";
 
 export default function HomePage() {
   return (
-    <>
+    <div className="h-full">
       <Header />
       <Content />
-    </>
+    </div>
   );
 }
