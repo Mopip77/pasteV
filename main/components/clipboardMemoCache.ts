@@ -45,6 +45,7 @@ class ClipboardMemoCache {
     }
 
     public query(queryBody: ListClipboardHistoryQuery): ClipboardHisotryEntity[] {
+        console.debug("query history, body=", queryBody)
         return db.listClipboardHistory(queryBody)
     }
 }
