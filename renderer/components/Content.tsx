@@ -2,6 +2,8 @@
 import { ClipboardHisotryEntity } from "@/lib/schemes";
 import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
+import hljs from "highlight.js";
+import "highlight.js/styles/default.css";
 
 const HidePointerUl = styled.ul<{ hidePointer: boolean }>`
   ${(props) => props.hidePointer && "cursor: none;"}
@@ -66,14 +68,27 @@ const Content = () => {
       const base64String = Buffer.from(item.blob).toString("base64");
       return <img src={`data:image/png;base64,${base64String}`} alt="Detail" />;
     } else {
-      return (
-        <pre
-          style={{ fontFamily: "inherit" }}
-          className="whitespace-pre-wrap"
-        >
-          {item.text}
-        </pre>
-      );
+      const hilightResult = hljs.highlightAuto(item.text);
+      if (hilightResult.errorRaised) {
+        return (
+          <pre
+            style={{ fontFamily: "inherit" }}
+            className="whitespace-pre-wrap"
+          >
+            {item.text}
+          </pre>
+        );
+      } else {
+        console.debug("code language, ", hilightResult.language);
+        return (
+          <pre
+            style={{ fontFamily: "inherit" }}
+            className="whitespace-pre-wrap"
+          >
+            <code dangerouslySetInnerHTML={{ __html: hilightResult.value }}></code>
+          </pre>
+        );
+      }
     }
   };
 
