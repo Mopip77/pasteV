@@ -8,8 +8,12 @@ import Content from "@/components/Content";
 export default function HomePage() {
   return (
     <div className="h-full">
-      <Header />
-      <Content />
+      <div className="h-[10vh]">
+        <Header />
+      </div>
+      <div className="h-[90vh]">
+        <Content />
+      </div>
     </div>
   );
 }
