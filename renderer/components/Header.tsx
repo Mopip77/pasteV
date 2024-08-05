@@ -3,9 +3,9 @@ import { Input } from "./ui/input";
 
 const Header = () => {
   return (
-    <>
-      <Input placeholder="Input to search..." />
-    </>
+    <div className="fixed w-full h-12">
+      <Input className="h-full" placeholder="Input to search..." />
+    </div>
   );
 };
 

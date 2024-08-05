@@ -102,7 +102,7 @@ const Content = () => {
           ))}
       </HidePointerUl>
       <div className="w-3/5 divide-y divide-gray-200">
-        <div className="h-1/2 overflow-scroll py-4 px-4">
+        <div className="h-1/2 overflow-scroll py-2 px-4">
           {selectedIndex >= 0 && renderDetail(histories[selectedIndex])}
         </div>
         <div className="h-1/2">details</div>
