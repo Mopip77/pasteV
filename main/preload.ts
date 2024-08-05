@@ -1,11 +1,15 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
 
 const handler = {
-  send(channel, value) {
+  send(channel: string, value: unknown) {
     ipcRenderer.send(channel, value)
   },
-  on(channel, callback) {
-    const subscription = (_event, ...args) => callback(...args)
+  invoke(channel: string, ...args: unknown[]): any {
+    return ipcRenderer.invoke(channel, args)
+  },
+  on(channel: string, callback: (...args: unknown[]) => void) {
+    const subscription = (_event: IpcRendererEvent, ...args: unknown[]) =>
+      callback(...args)
     ipcRenderer.on(channel, subscription)
 
     return () => {
@@ -15,3 +19,5 @@ const handler = {
 }
 
 contextBridge.exposeInMainWorld('ipc', handler)
+
+export type IpcHandler = typeof handler

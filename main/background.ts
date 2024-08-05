@@ -1,10 +1,11 @@
 import path from "path";
-import { app, ipcMain, globalShortcut, Menu } from "electron";
+import { app, ipcMain, globalShortcut } from "electron";
 import serve from "electron-serve";
 import { readClipboard } from "./utils/clipboard";
 import { startReadingClipboardDaemon } from "./helpers/read-clipboard-daemon";
 import { initSingletons } from "./components/singletons";
 import createWindow from "./helpers/create-window";
+import { registerHandlers } from "./helpers/ipc-handlers";
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -17,6 +18,7 @@ if (isProd) {
 (async () => {
   initSingletons();
   startReadingClipboardDaemon();
+  registerHandlers(ipcMain);
 
   await app.whenReady();
 

@@ -9,10 +9,11 @@ interface ClipboardHisotryEntity {
 }
 
 interface ListClipboardHistoryQuery {
+    offset?: number
     size: number
 }
 
-export {
+export type {
     ClipboardHisotryEntity,
     ListClipboardHistoryQuery
 }

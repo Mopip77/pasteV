@@ -1,6 +1,11 @@
-import { ClipboardHisotryEntity } from "../db/schemes";
+import { ClipboardHisotryEntity, ListClipboardHistoryQuery } from "../db/schemes";
 import { db } from "./singletons";
 import { LinkedDictionary } from 'typescript-collections';
+
+interface QueryClipboardHistory {
+    offset: number
+    size: number
+}
 
 class ClipboardMemoCache {
 
@@ -39,6 +44,9 @@ class ClipboardMemoCache {
         this.last = data
     }
 
+    public query(queryBody: ListClipboardHistoryQuery): ClipboardHisotryEntity[] {
+        return db.listClipboardHistory(queryBody)
+    }
 }
 
 export default ClipboardMemoCache;

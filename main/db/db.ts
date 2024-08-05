@@ -59,10 +59,13 @@ class DatabaseManager {
             SELECT id, type, text, blob, hash_key, create_time, last_read_time
             FROM clipboard_history
             ORDER BY last_read_time DESC
-            LIMIT ?
+            LIMIT ?, ?
           `);
 
-        return querySql.all(query.size).map(row => ({
+        return querySql.all(
+            query.offset || 0,
+            query.size
+        ).map(row => ({
             id: row.id,
             type: row.type,
             text: row.text,

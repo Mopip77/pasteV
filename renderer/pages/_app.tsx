@@ -1,20 +1,15 @@
+"use client";
 import React from "react";
 
 import Header from "@/components/Header";
 import "../styles/globals.css";
+import Content from "@/components/Content";
 
 export default function HomePage() {
-  const [message, setMessage] = React.useState({});
-
-  React.useEffect(() => {
-    window.ipc.on("message", (message) => {
-      setMessage(message);
-    });
-  }, []);
-
   return (
     <>
-      <Header></Header>
+      <Header />
+      <Content />
     </>
   );
 }

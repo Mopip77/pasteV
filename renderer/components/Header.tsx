@@ -4,7 +4,7 @@ import { Input } from "./ui/input";
 const Header = () => {
   return (
     <>
-      <Input type="email" placeholder="Email" />
+      <Input placeholder="Input to search..." />
     </>
   );
 };
