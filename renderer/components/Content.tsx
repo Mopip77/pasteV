@@ -1,6 +1,6 @@
 "use client";
 import { ClipboardHisotryEntity } from "@/lib/schemes";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 
 const HidePointerUl = styled.ul<{ hidePointer: boolean }>`
@@ -12,6 +12,7 @@ const Content = () => {
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [mouseUpIndex, setMouseIndex] = useState<number>(-1);
   const [hidePointer, setHidePointer] = useState<boolean>(false);
+  const listRefs = useRef<(HTMLLIElement | null)[]>([]);
 
   useEffect(() => {
     global.window.ipc
@@ -48,6 +49,14 @@ const Content = () => {
     };
   }, [histories]);
 
+  useEffect(() => {
+    if (selectedIndex >= 0) {
+      listRefs.current[selectedIndex]?.scrollIntoView({
+        block: "nearest",
+      });
+    }
+  }, [selectedIndex]);
+
   const generateSummary = (item: ClipboardHisotryEntity): string => {
     return item.type === "image" ? "Image..." : item.text;
   };
@@ -63,11 +72,17 @@ const Content = () => {
 
   return (
     <div className="flex h-full divide-x divide-gray-200">
-      <HidePointerUl hidePointer={hidePointer} className="w-2/5 overflow-y-scroll">
+      <HidePointerUl
+        hidePointer={hidePointer}
+        className="w-2/5 overflow-y-scroll"
+      >
         {histories.length > 0 &&
           histories.map((item, index) => (
             <li
               key={item.id}
+              ref={(el) => {
+                listRefs.current[index] = el;
+              }}
               className={`h-10 py-[4px] pl-2 flex items-center truncate ${
                 index === mouseUpIndex ? "bg-blue-200" : ""
               } ${index === selectedIndex ? "bg-blue-400" : ""}`}

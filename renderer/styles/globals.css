@@ -74,6 +74,9 @@
 }
 
 @layer base {
+  html {
+    scrollbar-width: none;
+  }
   * {
     @apply border-border;
     scrollbar-width: thin;
