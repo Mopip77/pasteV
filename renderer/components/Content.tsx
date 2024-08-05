@@ -66,8 +66,14 @@ const Content = () => {
       const base64String = Buffer.from(item.blob).toString("base64");
       return <img src={`data:image/png;base64,${base64String}`} alt="Detail" />;
     } else {
-      // return <div>{item?.text}</div>;
-      return <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>{item.text}</pre>;
+      return (
+        <pre
+          style={{ fontFamily: "inherit" }}
+          className="whitespace-pre-wrap h-full w-full border-2"
+        >
+          {item.text}
+        </pre>
+      );
     }
   };
 
@@ -102,7 +108,7 @@ const Content = () => {
           ))}
       </HidePointerUl>
       <div className="w-3/5 divide-y divide-gray-200">
-        <div className="h-1/2 overflow-scroll py-2 px-4">
+        <div className="h-1/2 overflow-scroll py-2 px-2">
           {selectedIndex >= 0 && renderDetail(histories[selectedIndex])}
         </div>
         <div className="h-1/2">details</div>
