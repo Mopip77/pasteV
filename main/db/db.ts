@@ -55,7 +55,12 @@ class DatabaseManager {
     }
 
     public listClipboardHistory(query: ListClipboardHistoryQuery): ClipboardHisotryEntity[] {
-        const moreWhereClause = query.keyword ? `AND (text LIKE '%${query.keyword}%')` : '';
+        let moreWhereClause;
+        if (query.regex) {
+            moreWhereClause = query.keyword ? `AND (text REGEX '${query.keyword}')` : '';
+        } else {
+            moreWhereClause = query.keyword ? `AND (text LIKE '%${query.keyword}%')` : '';
+        }
 
         const querySql = this.db.prepare(`
             SELECT id, type, text, blob, hash_key, create_time, last_read_time

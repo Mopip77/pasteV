@@ -10,6 +10,7 @@ interface ClipboardHisotryEntity {
 
 interface ListClipboardHistoryQuery {
     keyword?: string
+    regex?: boolean
     offset?: number
     size: number
 }

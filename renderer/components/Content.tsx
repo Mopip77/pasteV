@@ -5,12 +5,13 @@ import hljs from "highlight.js";
 import "highlight.js/styles/default.css";
 import { HIGHLIGHT_LANGUAGES } from "@/lib/consts";
 import { SYMBOL_CLEARED_COOKIES } from "next/dist/server/api-utils";
+import { SearchBody } from "@/types/types";
 
 interface IProps {
-  searchKeyword: string;
+  searchBody: SearchBody;
 }
 
-const Content = ({ searchKeyword }: IProps) => {
+const Content = ({ searchBody }: IProps) => {
   const [histories, setHistories] = useState<ClipboardHisotryEntity[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [mouseUpIndex, setMouseIndex] = useState<number>(-1);
@@ -24,7 +25,8 @@ const Content = ({ searchKeyword }: IProps) => {
   const fetchHistory = async ({ offset = 0, size = batchSize } = {}) => {
     setLoadingHistory(true);
     const result = await global.window.ipc.invoke("clipboard:query", {
-      keyword: searchKeyword,
+      keyword: searchBody.keyword,
+      regex : searchBody.config?.regex,
       offset,
       size,
     });
@@ -55,7 +57,7 @@ const Content = ({ searchKeyword }: IProps) => {
 
   useEffect(() => {
     initComponent();
-  }, [searchKeyword]);
+  }, [searchBody.keyword]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
