@@ -1,27 +1,39 @@
 "use client";
 import { ClipboardHisotryEntity } from "@/lib/schemes";
 import React, { useState, useEffect, useRef } from "react";
-import styled from "styled-components";
 import hljs from "highlight.js";
 import "highlight.js/styles/default.css";
-
-const HidePointerUl = styled.ul<{ hidePointer: boolean }>`
-  ${(props) => props.hidePointer && "cursor: none;"}
-`;
 
 const Content = () => {
   const [histories, setHistories] = useState<ClipboardHisotryEntity[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [mouseUpIndex, setMouseIndex] = useState<number>(-1);
   const [hidePointer, setHidePointer] = useState<boolean>(false);
+  const [loadingHistory, setLoadingHistory] = useState<boolean>(false);
+  const [noMoreHistory, setNoMoreHistory] = useState<boolean>(false);
   const listRefs = useRef<(HTMLLIElement | null)[]>([]);
 
+  const batchSize = 40;
+
+  const fetchHistory = async ({ offset = 0, size = batchSize } = {}) => {
+    setLoadingHistory(true);
+    const result = await global.window.ipc.invoke("clipboard:query", {
+      offset,
+      size,
+    });
+
+    if (result.length !== size) {
+      setNoMoreHistory(true);
+    }
+
+    setLoadingHistory(false);
+    return result;
+  };
+
   useEffect(() => {
-    global.window.ipc
-      .invoke("clipboard:query", { offset: 0, size: 100 })
-      .then((_histories: ClipboardHisotryEntity[]) => {
-        setHistories(_histories);
-      });
+    fetchHistory().then((result: ClipboardHisotryEntity[]) => {
+      setHistories(result);
+    });
   }, []);
 
   useEffect(() => {
@@ -59,6 +71,22 @@ const Content = () => {
     }
   }, [selectedIndex]);
 
+  const handleUlScroll = (event: React.UIEvent<HTMLUListElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+    if (
+      scrollTop + clientHeight >= scrollHeight - 10 &&
+      !loadingHistory &&
+      !noMoreHistory
+    ) {
+      fetchHistory({
+        offset: histories.length,
+        size: batchSize,
+      }).then((moreHistories: ClipboardHisotryEntity[]) => {
+        setHistories((prevHistories) => [...prevHistories, ...moreHistories]);
+      });
+    }
+  };
+
   const generateSummary = (item: ClipboardHisotryEntity): string => {
     return item.type === "image" ? "Image..." : item.text;
   };
@@ -68,7 +96,7 @@ const Content = () => {
       const base64String = Buffer.from(item.blob).toString("base64");
       return <img src={`data:image/png;base64,${base64String}`} alt="Detail" />;
     } else {
-      const hilightResult = hljs.highlightAuto(item.text);
+      const hilightResult = hljs.highlightAuto(item?.text);
       if (hilightResult.errorRaised) {
         return (
           <pre
@@ -85,7 +113,9 @@ const Content = () => {
             style={{ fontFamily: "inherit" }}
             className="whitespace-pre-wrap"
           >
-            <code dangerouslySetInnerHTML={{ __html: hilightResult.value }}></code>
+            <code
+              dangerouslySetInnerHTML={{ __html: hilightResult.value }}
+            ></code>
           </pre>
         );
       }
@@ -94,9 +124,11 @@ const Content = () => {
 
   return (
     <div className="flex h-full divide-x divide-gray-200">
-      <HidePointerUl
-        hidePointer={hidePointer}
-        className="w-2/5 overflow-hidden hover:overflow-y-auto scrollbar-thin scrollbar-gutter-stable scrollbar-track-transparent scrollbar-thumb-slate-400 scrollbar-thumb-round-full"
+      <ul
+        className={`w-2/5 overflow-hidden hover:overflow-y-auto scrollbar-thin scrollbar-gutter-stable scrollbar-track-transparent scrollbar-thumb-slate-400 scrollbar-thumb-round-full
+          ${hidePointer ? "cursor-none" : ""}
+          `}
+        onScroll={handleUlScroll}
       >
         {histories.length > 0 &&
           histories.map((item, index) => (
@@ -121,7 +153,7 @@ const Content = () => {
               <span className="truncate">{generateSummary(item)}</span>
             </li>
           ))}
-      </HidePointerUl>
+      </ul>
       <div className="w-3/5 divide-y divide-gray-200">
         <div className="h-1/2 overflow-hidden hover:overflow-auto py-2 px-2 scrollbar-thin scrollbar-gutter-stable scrollbar-track-transparent scrollbar-thumb-slate-400 scrollbar-thumb-round-full">
           {selectedIndex >= 0 && renderDetail(histories[selectedIndex])}
