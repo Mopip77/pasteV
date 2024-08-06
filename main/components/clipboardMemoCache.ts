@@ -2,11 +2,6 @@ import { ClipboardHisotryEntity, ListClipboardHistoryQuery } from "../db/schemes
 import { db } from "./singletons";
 import { LinkedDictionary } from 'typescript-collections';
 
-interface QueryClipboardHistory {
-    offset: number
-    size: number
-}
-
 class ClipboardMemoCache {
 
     private caches: LinkedDictionary<string, ClipboardHisotryEntity>

@@ -1,5 +1,5 @@
 "use client";
-import { ClipboardHisotryEntity } from "@/lib/schemes";
+import { ClipboardHisotryEntity } from "@/../main/db/schemes";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import hljs from "highlight.js";
 import "highlight.js/styles/default.css";
@@ -49,6 +49,13 @@ const Content = () => {
         setSelectedIndex((prevIndex) => Math.max(prevIndex - 1, 0));
         setHidePointer(true);
         setMouseIndex(-1);
+      } else if (event.key === "Enter") {
+        console.log(
+          "entered",
+          selectedIndex,
+          histories[selectedIndex]
+        )
+        reCopy(histories[selectedIndex]);
       }
     };
 
@@ -62,7 +69,7 @@ const Content = () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("mousemove", handleMouseMove);
     };
-  }, [histories]);
+  }, [selectedIndex, histories]);
 
   useEffect(() => {
     if (selectedIndex >= 0) {
@@ -86,6 +93,14 @@ const Content = () => {
         setHistories((prevHistories) => [...prevHistories, ...moreHistories]);
       });
     }
+  };
+
+  const reCopy = (item: ClipboardHisotryEntity) => {
+    console.debug("reCopy, item=", item);
+    global.window.ipc.invoke("clipboard:add", item);
+    fetchHistory().then((result: ClipboardHisotryEntity[]) => {
+      setHistories(result);
+    });
   };
 
   const generateSummary = (item: ClipboardHisotryEntity): string => {

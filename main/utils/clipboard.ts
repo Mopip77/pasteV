@@ -1,4 +1,4 @@
-import { clipboard } from "electron";
+import { clipboard, nativeImage } from "electron";
 import crypto from 'crypto'
 
 interface ClipboardData {
@@ -30,7 +30,23 @@ export const readClipboard = (): ClipboardData => {
     }
 }
 
-export const generateHashKey = (data: ClipboardData) : string => {
+export const writeClipboard = (data: ClipboardData) => {
+    console.log('writeClipboard', data)
+    switch (data.type) {
+        case 'text':
+            clipboard.writeText(data.text!)
+            break
+        case 'image':
+            const img = nativeImage.createFromBuffer(data.blob!)
+            clipboard.writeImage(img)
+            break
+        case 'file':
+            clipboard.writeBuffer('public.file-url', Buffer.from(data.text!))
+            break
+    }
+}
+
+export const generateHashKey = (data: ClipboardData): string => {
     const hash = crypto.createHash('md5');
     hash.update(data.type);
 

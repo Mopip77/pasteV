@@ -1,6 +1,6 @@
 interface ClipboardHisotryEntity {
     id?: number
-    type: string
+    type: 'text' | 'image' | 'file'
     text: string
     blob?: Buffer
     hashKey: string
