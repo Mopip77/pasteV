@@ -5,7 +5,6 @@ const handler = {
     ipcRenderer.send(channel, value)
   },
   invoke(channel: string, ...args: unknown[]): any {
-    console.debug("ipc invoke, body=", args)
     return ipcRenderer.invoke(channel, ...args)
   },
   on(channel: string, callback: (...args: unknown[]) => void) {

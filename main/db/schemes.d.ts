@@ -9,6 +9,7 @@ interface ClipboardHisotryEntity {
 }
 
 interface ListClipboardHistoryQuery {
+    keyword?: string
     offset?: number
     size: number
 }

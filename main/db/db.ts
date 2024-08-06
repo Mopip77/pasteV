@@ -2,6 +2,7 @@ import { join } from 'node:path'
 import { app } from "electron";
 import Database from 'better-sqlite3/lib/database';
 import { ClipboardHisotryEntity, ListClipboardHistoryQuery } from './schemes';
+import { MonitorSpeaker } from 'lucide-react';
 
 class DatabaseManager {
 
@@ -55,9 +56,12 @@ class DatabaseManager {
     }
 
     public listClipboardHistory(query: ListClipboardHistoryQuery): ClipboardHisotryEntity[] {
+        const moreWhereClause = query.keyword ? `AND (text LIKE '%${query.keyword}%')` : '';
+
         const querySql = this.db.prepare(`
             SELECT id, type, text, blob, hash_key, create_time, last_read_time
             FROM clipboard_history
+            WHERE 1 = 1 ${moreWhereClause}
             ORDER BY last_read_time DESC
             LIMIT ?, ?
           `);

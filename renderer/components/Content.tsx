@@ -5,7 +5,11 @@ import hljs from "highlight.js";
 import "highlight.js/styles/default.css";
 import { HIGHLIGHT_LANGUAGES } from "@/lib/consts";
 
-const Content = () => {
+interface IProps {
+  searchKeyword: string;
+}
+
+const Content = ({ searchKeyword }: IProps) => {
   const [histories, setHistories] = useState<ClipboardHisotryEntity[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [mouseUpIndex, setMouseIndex] = useState<number>(-1);
@@ -19,6 +23,7 @@ const Content = () => {
   const fetchHistory = async ({ offset = 0, size = batchSize } = {}) => {
     setLoadingHistory(true);
     const result = await global.window.ipc.invoke("clipboard:query", {
+      keyword: searchKeyword,
       offset,
       size,
     });
@@ -41,11 +46,11 @@ const Content = () => {
       fetchHistory().then((result: ClipboardHisotryEntity[]) => {
         setHistories(result);
       });
-    }
+    };
 
     window.ipc.on("app:show", () => initComponent());
     initComponent();
-  }, []);
+  }, [searchKeyword]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -60,11 +65,7 @@ const Content = () => {
         setHidePointer(true);
         setMouseIndex(-1);
       } else if (event.key === "Enter") {
-        console.log(
-          "entered",
-          selectedIndex,
-          histories[selectedIndex]
-        )
+        console.log("entered", selectedIndex, histories[selectedIndex]);
         reCopy(histories[selectedIndex]);
       }
     };
@@ -108,7 +109,7 @@ const Content = () => {
   const reCopy = async (item: ClipboardHisotryEntity) => {
     console.debug("reCopy, item=", item);
     window.ipc.invoke("clipboard:add", item);
-    window.ipc.send("app:hide", '');
+    window.ipc.send("app:hide", "");
   };
 
   const generateSummary = (item: ClipboardHisotryEntity): string => {
