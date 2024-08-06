@@ -7,12 +7,15 @@ export const startReadingClipboardDaemon = () => {
         const clipboardData = readClipboard();
         const now = new Date().toISOString();
 
-        let text : string = ''
-        let blob : Buffer | undefined = undefined
+        let text: string = ''
+        let blob: Buffer | undefined = undefined
         switch (clipboardData.type) {
             case "text":
             case "file":
-                text = clipboardData.text || ''
+                text = clipboardData.text
+                if (!text) {
+                    return
+                }
                 break
             case "image":
                 blob = clipboardData.blob!

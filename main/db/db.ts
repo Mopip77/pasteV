@@ -2,7 +2,6 @@ import { join } from 'node:path'
 import { app } from "electron";
 import Database from 'better-sqlite3/lib/database';
 import { ClipboardHisotryEntity, ListClipboardHistoryQuery } from './schemes';
-import { MonitorSpeaker } from 'lucide-react';
 
 class DatabaseManager {
 
