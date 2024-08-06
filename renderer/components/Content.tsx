@@ -165,6 +165,9 @@ const Content = () => {
               onClick={() => {
                 setSelectedIndex(index);
               }}
+              onDoubleClick={() => {
+                reCopy(item);
+              }}
             >
               <span className="truncate">{generateSummary(item)}</span>
             </li>
