@@ -21,6 +21,10 @@ class DatabaseManager {
         }
         this.db.pragma('journal_mode = WAL');
 
+        this.db.function('regexp', { deterministic: true }, (regex, text) => {
+            return new RegExp(regex).test(text) ? 1 : 0;
+        });
+
         this.db.exec(`
             CREATE TABLE IF NOT EXISTS clipboard_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,7 +61,7 @@ class DatabaseManager {
     public listClipboardHistory(query: ListClipboardHistoryQuery): ClipboardHisotryEntity[] {
         let moreWhereClause;
         if (query.regex) {
-            moreWhereClause = query.keyword ? `AND (text REGEX '${query.keyword}')` : '';
+            moreWhereClause = query.keyword ? `AND (text REGEXP '${query.keyword}')` : '';
         } else {
             moreWhereClause = query.keyword ? `AND (text LIKE '%${query.keyword}%')` : '';
         }

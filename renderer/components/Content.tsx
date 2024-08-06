@@ -1,11 +1,8 @@
 "use client";
 import { ClipboardHisotryEntity } from "@/../main/db/schemes";
-import React, { useState, useEffect, useRef, useMemo } from "react";
-import hljs from "highlight.js";
-import "highlight.js/styles/default.css";
-import { HIGHLIGHT_LANGUAGES } from "@/lib/consts";
-import { SYMBOL_CLEARED_COOKIES } from "next/dist/server/api-utils";
 import { SearchBody } from "@/types/types";
+import "highlight.js/styles/default.css";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 interface IProps {
   searchBody: SearchBody;
@@ -22,11 +19,17 @@ const Content = ({ searchBody }: IProps) => {
 
   const batchSize = 40;
 
-  const fetchHistory = async ({ offset = 0, size = batchSize } = {}) => {
+  const fetchHistory = async ({
+    keyword = "",
+    offset = 0,
+    size = batchSize,
+    regex = false,
+  } = {}) => {
+    console.debug("fetchHistory, keyword=", keyword, "offset=", offset, "size=", size, "regex=", regex);
     setLoadingHistory(true);
     const result = await global.window.ipc.invoke("clipboard:query", {
-      keyword: searchBody.keyword,
-      regex : searchBody.config?.regex,
+      keyword,
+      regex,
       offset,
       size,
     });
@@ -45,20 +48,28 @@ const Content = ({ searchBody }: IProps) => {
     setMouseIndex(-1);
     setHidePointer(false);
     setNoMoreHistory(false);
-    fetchHistory().then((result: ClipboardHisotryEntity[]) => {
+    fetchHistory({
+      keyword: searchBody.keyword,
+      offset: 0,
+      size: batchSize,
+      regex: searchBody.config?.regex,
+    }).then((result: ClipboardHisotryEntity[]) => {
       setHistories(result);
     });
   };
 
+  // intialize component
   useEffect(() => {
     window.ipc.on("app:show", () => initComponent());
     initComponent();
   }, []);
 
+  // search body changed
   useEffect(() => {
     initComponent();
-  }, [searchBody.keyword]);
+  }, [searchBody]);
 
+  // keyboard event
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "ArrowDown") {
@@ -89,6 +100,7 @@ const Content = ({ searchBody }: IProps) => {
     };
   }, [selectedIndex, histories]);
 
+  // scroll to selected index
   useEffect(() => {
     if (selectedIndex >= 0) {
       listRefs.current[selectedIndex]?.scrollIntoView({
@@ -105,8 +117,10 @@ const Content = ({ searchBody }: IProps) => {
       !noMoreHistory
     ) {
       fetchHistory({
+        keyword: searchBody.keyword,
         offset: histories.length,
         size: batchSize,
+        regex: searchBody.config?.regex,
       }).then((moreHistories: ClipboardHisotryEntity[]) => {
         setHistories((prevHistories) => [...prevHistories, ...moreHistories]);
       });
@@ -114,7 +128,6 @@ const Content = ({ searchBody }: IProps) => {
   };
 
   const reCopy = async (item: ClipboardHisotryEntity) => {
-    console.debug("reCopy, item=", item);
     window.ipc.invoke("clipboard:add", item);
     window.ipc.send("app:hide", "");
   };
@@ -194,7 +207,7 @@ const Content = ({ searchBody }: IProps) => {
         <div className="h-1/2 overflow-hidden hover:overflow-auto py-2 px-2 scrollbar-thin scrollbar-gutter-stable scrollbar-track-transparent scrollbar-thumb-slate-400 scrollbar-thumb-round-full">
           {showDetail}
         </div>
-        <div className="h-1/2">detailss</div>
+        <div className="h-1/2">details</div>
       </div>
     </div>
   );

@@ -7,4 +7,4 @@ interface SearchBody {
     config?: SearchConfig
 }
 
-export type { SearchContext, SearchBody }
+export type { SearchBody, SearchBody }

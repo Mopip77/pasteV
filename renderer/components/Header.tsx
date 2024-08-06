@@ -2,10 +2,10 @@ import React, { useEffect } from "react";
 import { Input } from "./ui/input";
 import { Toggle } from "./ui/toggle";
 import { Regex } from "lucide-react";
-import { SearchContext } from "@/types/types";
+import { SearchBody } from "@/types/types";
 
 interface IProps {
-  setSearchBody: (ctx: SearchContext) => void;
+  setSearchBody: (body: SearchBody) => void;
 }
 
 const Header = ({ setSearchBody }: IProps) => {
@@ -13,9 +13,12 @@ const Header = ({ setSearchBody }: IProps) => {
   const [regex, setRegex] = React.useState<boolean>(false);
 
   useEffect(() => {
+    console.log("set search body", keyword, regex);
     setSearchBody({
       keyword,
-      regex,
+      config: {
+        regex,
+      },
     });
   }, [keyword, regex]);
 
@@ -26,7 +29,12 @@ const Header = ({ setSearchBody }: IProps) => {
         placeholder="Input to search..."
         onChange={(e) => setSerchKeyword(e.target.value)}
       />
-      <Toggle onPressedChange={setRegex}>
+      <Toggle
+        onPressedChange={(pressed) => {
+          console.log("pressed", pressed);
+          setRegex(pressed);
+        }}
+      >
         <Regex />
       </Toggle>
     </div>
