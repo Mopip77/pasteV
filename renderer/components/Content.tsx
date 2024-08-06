@@ -32,9 +32,19 @@ const Content = () => {
   };
 
   useEffect(() => {
-    fetchHistory().then((result: ClipboardHisotryEntity[]) => {
-      setHistories(result);
-    });
+    const initComponent = async () => {
+      setSelectedIndex(-1);
+      setHistories([]);
+      setMouseIndex(-1);
+      setHidePointer(false);
+      setNoMoreHistory(false);
+      fetchHistory().then((result: ClipboardHisotryEntity[]) => {
+        setHistories(result);
+      });
+    }
+
+    window.ipc.on("app:show", () => initComponent());
+    initComponent();
   }, []);
 
   useEffect(() => {
@@ -95,12 +105,10 @@ const Content = () => {
     }
   };
 
-  const reCopy = (item: ClipboardHisotryEntity) => {
+  const reCopy = async (item: ClipboardHisotryEntity) => {
     console.debug("reCopy, item=", item);
-    global.window.ipc.invoke("clipboard:add", item);
-    fetchHistory().then((result: ClipboardHisotryEntity[]) => {
-      setHistories(result);
-    });
+    window.ipc.invoke("clipboard:add", item);
+    window.ipc.send("app:hide", '');
   };
 
   const generateSummary = (item: ClipboardHisotryEntity): string => {
@@ -112,17 +120,18 @@ const Content = () => {
       const base64String = Buffer.from(item.blob).toString("base64");
       return <img src={`data:image/png;base64,${base64String}`} alt="Detail" />;
     } else {
-      const highlightResult = hljs.highlightAuto(item?.text);
-      console.debug("highlightResult, ", highlightResult);
-      const display =
-        highlightResult.errorRaised ||
-        !HIGHLIGHT_LANGUAGES.includes(highlightResult.language) ? (
-          item.text
-        ) : (
-          <code
-            dangerouslySetInnerHTML={{ __html: highlightResult.value }}
-          ></code>
-        );
+      const display = item.text;
+      // const highlightResult = hljs.highlightAuto(item?.text);
+      // console.debug("highlightResult, ", highlightResult);
+      // const display =
+      //   highlightResult.errorRaised ||
+      //   !HIGHLIGHT_LANGUAGES.includes(highlightResult.language) ? (
+      //     item.text
+      //   ) : (
+      //     <code
+      //       dangerouslySetInnerHTML={{ __html: highlightResult.value }}
+      //     ></code>
+      //   );
 
       return (
         <pre style={{ fontFamily: "inherit" }} className="whitespace-pre-wrap">

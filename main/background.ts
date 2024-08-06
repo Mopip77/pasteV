@@ -1,7 +1,6 @@
 import path from "path";
 import { app, ipcMain, globalShortcut } from "electron";
 import serve from "electron-serve";
-import { readClipboard } from "./utils/clipboard";
 import { startReadingClipboardDaemon } from "./helpers/read-clipboard-daemon";
 import { initSingletons } from "./components/singletons";
 import createWindow from "./helpers/create-window";
@@ -51,14 +50,11 @@ if (isProd) {
     } else {
       mainWindow.show();
       mainWindow.focus();
+      mainWindow.webContents.send("app:show");
     }
   });
 })();
 
 app.on("window-all-closed", () => {
   app.quit();
-});
-
-ipcMain.on("message", async (event) => {
-  event.reply("message", readClipboard());
 });
