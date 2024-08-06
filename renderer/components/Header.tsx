@@ -30,10 +30,11 @@ const Header = ({ setSearchBody }: IProps) => {
         onChange={(e) => setSerchKeyword(e.target.value)}
       />
       <Toggle
-        onPressedChange={(pressed) => {
-          console.log("pressed", pressed);
-          setRegex(pressed);
-        }}
+        className={`
+          ${keyword.length === 0 ? "opacity-0 pointer-events-none cursor-default" : ""}
+          ease-in-out duration-500 transition-opacity
+        `}
+        onPressedChange={setRegex}
       >
         <Regex />
       </Toggle>
