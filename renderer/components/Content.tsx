@@ -3,6 +3,7 @@ import { ClipboardHisotryEntity } from "@/lib/schemes";
 import React, { useState, useEffect, useRef } from "react";
 import hljs from "highlight.js";
 import "highlight.js/styles/default.css";
+import { HIGHLIGHT_LANGUAGES } from "@/lib/consts";
 
 const Content = () => {
   const [histories, setHistories] = useState<ClipboardHisotryEntity[]>([]);
@@ -96,29 +97,23 @@ const Content = () => {
       const base64String = Buffer.from(item.blob).toString("base64");
       return <img src={`data:image/png;base64,${base64String}`} alt="Detail" />;
     } else {
-      const hilightResult = hljs.highlightAuto(item?.text);
-      if (hilightResult.errorRaised) {
-        return (
-          <pre
-            style={{ fontFamily: "inherit" }}
-            className="whitespace-pre-wrap"
-          >
-            {item.text}
-          </pre>
+      const highlightResult = hljs.highlightAuto(item?.text);
+      console.debug("highlightResult, ", highlightResult);
+      const display =
+        highlightResult.errorRaised ||
+        !HIGHLIGHT_LANGUAGES.includes(highlightResult.language) ? (
+          item.text
+        ) : (
+          <code
+            dangerouslySetInnerHTML={{ __html: highlightResult.value }}
+          ></code>
         );
-      } else {
-        console.debug("code language, ", hilightResult.language);
-        return (
-          <pre
-            style={{ fontFamily: "inherit" }}
-            className="whitespace-pre-wrap"
-          >
-            <code
-              dangerouslySetInnerHTML={{ __html: hilightResult.value }}
-            ></code>
-          </pre>
-        );
-      }
+
+      return (
+        <pre style={{ fontFamily: "inherit" }} className="whitespace-pre-wrap">
+          {display}
+        </pre>
+      );
     }
   };
 
