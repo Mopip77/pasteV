@@ -1,6 +1,6 @@
 "use client";
 import { ClipboardHisotryEntity } from "@/lib/schemes";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import hljs from "highlight.js";
 import "highlight.js/styles/default.css";
 import { HIGHLIGHT_LANGUAGES } from "@/lib/consts";
@@ -117,6 +117,12 @@ const Content = () => {
     }
   };
 
+  const showDetail = useMemo(() => {
+    if (selectedIndex >= 0) {
+      return renderDetail(histories[selectedIndex]);
+    }
+  }, [selectedIndex]);
+
   return (
     <div className="flex h-full divide-x divide-gray-200">
       <ul
@@ -151,7 +157,7 @@ const Content = () => {
       </ul>
       <div className="w-3/5 divide-y divide-gray-200">
         <div className="h-1/2 overflow-hidden hover:overflow-auto py-2 px-2 scrollbar-thin scrollbar-gutter-stable scrollbar-track-transparent scrollbar-thumb-slate-400 scrollbar-thumb-round-full">
-          {selectedIndex >= 0 && renderDetail(histories[selectedIndex])}
+          {showDetail}
         </div>
         <div className="h-1/2">details</div>
       </div>
