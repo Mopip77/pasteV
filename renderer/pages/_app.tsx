@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 import Header from "@/components/Header";
 import "../styles/globals.css";

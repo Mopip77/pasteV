@@ -59,24 +59,26 @@ class DatabaseManager {
     }
 
     public listClipboardHistory(query: ListClipboardHistoryQuery): ClipboardHisotryEntity[] {
-        let moreWhereClause;
-        if (query.regex) {
-            moreWhereClause = query.keyword ? `AND (text REGEXP '${query.keyword}')` : '';
-        } else {
-            moreWhereClause = query.keyword ? `AND (text LIKE '%${query.keyword}%')` : '';
+        const queryParams = []
+        let keywordFilterClause = ''
+
+        if (query.keyword) {
+            queryParams.push(query.keyword)
+            keywordFilterClause = query.regex ? "AND (text REGEXP ?)" : "AND (text LIKE CONCAT('%', ?, '%'))"
         }
 
         const querySql = this.db.prepare(`
             SELECT id, type, text, blob, hash_key, create_time, last_read_time
             FROM clipboard_history
-            WHERE 1 = 1 ${moreWhereClause}
+            WHERE 1 = 1 ${keywordFilterClause}
             ORDER BY last_read_time DESC
             LIMIT ?, ?
           `);
+        queryParams.push(query.offset || 0)
+        queryParams.push(query.size)
 
         return querySql.all(
-            query.offset || 0,
-            query.size
+            queryParams
         ).map(row => ({
             id: row.id,
             type: row.type,
