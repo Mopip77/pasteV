@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import hljs from "highlight.js";
 import "highlight.js/styles/default.css";
 import { HIGHLIGHT_LANGUAGES } from "@/lib/consts";
+import { SYMBOL_CLEARED_COOKIES } from "next/dist/server/api-utils";
 
 interface IProps {
   searchKeyword: string;
@@ -36,19 +37,23 @@ const Content = ({ searchKeyword }: IProps) => {
     return result;
   };
 
-  useEffect(() => {
-    const initComponent = async () => {
-      setSelectedIndex(-1);
-      setHistories([]);
-      setMouseIndex(-1);
-      setHidePointer(false);
-      setNoMoreHistory(false);
-      fetchHistory().then((result: ClipboardHisotryEntity[]) => {
-        setHistories(result);
-      });
-    };
+  const initComponent = async () => {
+    setSelectedIndex(-1);
+    setHistories([]);
+    setMouseIndex(-1);
+    setHidePointer(false);
+    setNoMoreHistory(false);
+    fetchHistory().then((result: ClipboardHisotryEntity[]) => {
+      setHistories(result);
+    });
+  };
 
+  useEffect(() => {
     window.ipc.on("app:show", () => initComponent());
+    initComponent();
+  }, []);
+
+  useEffect(() => {
     initComponent();
   }, [searchKeyword]);
 
@@ -187,7 +192,7 @@ const Content = ({ searchKeyword }: IProps) => {
         <div className="h-1/2 overflow-hidden hover:overflow-auto py-2 px-2 scrollbar-thin scrollbar-gutter-stable scrollbar-track-transparent scrollbar-thumb-slate-400 scrollbar-thumb-round-full">
           {showDetail}
         </div>
-        <div className="h-1/2">details</div>
+        <div className="h-1/2">detailss</div>
       </div>
     </div>
   );
