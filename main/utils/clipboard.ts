@@ -1,5 +1,6 @@
 import { clipboard, nativeImage } from "electron";
 import crypto from 'crypto'
+import log from "electron-log/main";
 
 interface ClipboardData {
     type: 'text' | 'file' | 'image'
@@ -31,7 +32,7 @@ export const readClipboard = (): ClipboardData => {
 }
 
 export const writeClipboard = (data: ClipboardData) => {
-    console.log('writeClipboard', data)
+    log.debug('writeClipboard', data)
     switch (data.type) {
         case 'text':
             clipboard.writeText(data.text!)

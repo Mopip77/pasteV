@@ -5,10 +5,12 @@ import { startReadingClipboardDaemon } from "./helpers/read-clipboard-daemon";
 import { initSingletons } from "./components/singletons";
 import createWindow from "./helpers/create-window";
 import { registerHandlers } from "./helpers/ipc-handlers";
+import log from "electron-log/main";
 
 const isProd = process.env.NODE_ENV === "production";
 
-console.log("background process started");
+log.info("background process started");
+
 
 if (isProd) {
   serve({ directory: "app" });
@@ -17,9 +19,9 @@ if (isProd) {
 }
 
 (async () => {
-  // initSingletons();
-  // startReadingClipboardDaemon();
-  // registerHandlers(ipcMain);
+  initSingletons();
+  startReadingClipboardDaemon();
+  registerHandlers(ipcMain);
 
   await app.whenReady();
 
@@ -55,10 +57,6 @@ if (isProd) {
       mainWindow.webContents.send("app:show");
     }
   });
-
-  initSingletons();
-  startReadingClipboardDaemon();
-  registerHandlers(ipcMain);
 })();
 
 app.on("window-all-closed", () => {

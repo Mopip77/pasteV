@@ -2,6 +2,7 @@ import { join } from 'node:path'
 import { app } from "electron";
 import Database from 'better-sqlite3/lib/database';
 import { ClipboardHisotryEntity, ListClipboardHistoryQuery } from './schemes';
+import log from 'electron-log/main';
 
 class DatabaseManager {
 
@@ -11,12 +12,16 @@ class DatabaseManager {
     }
 
     public init() {
+        const baseDir = process.env.NODE_ENV === 'development' ? process.cwd() : process.resourcesPath;
+
+        const betterSqlite3NodePath = join(baseDir, '/build', 'better_sqlite3.node');
         const databasePath = join(app.getPath('userData'), 'clipboard.db');
-        console.log(`Init database, path=${databasePath}`);
+
+        log.info(`Init database, db path=${databasePath}, better_sqlite3.node path=${betterSqlite3NodePath}`);
         try {
-            this.db = new Database(databasePath, { verbose: console.log });
+            this.db = new Database(databasePath, { verbose: log.debug, nativeBinding: betterSqlite3NodePath });
         } catch (e) {
-            console.error("create database failed", e);
+            log.error("create database failed", e);
             return;
         }
         this.db.pragma('journal_mode = WAL');

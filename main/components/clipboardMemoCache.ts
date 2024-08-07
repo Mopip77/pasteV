@@ -1,3 +1,4 @@
+import log from "electron-log/main";
 import { ClipboardHisotryEntity, ListClipboardHistoryQuery } from "../db/schemes";
 import { db } from "./singletons";
 import { LinkedDictionary } from 'typescript-collections';
@@ -22,7 +23,7 @@ class ClipboardMemoCache {
             this.last = this.caches.values[this.caches.values.length - 1];
         }
 
-        console.debug("Loading histories from db, ", this.caches);
+        log.debug("Loading histories from db, ", this.caches);
     }
 
     public add(data: ClipboardHisotryEntity) {
@@ -40,7 +41,7 @@ class ClipboardMemoCache {
     }
 
     public query(queryBody: ListClipboardHistoryQuery): ClipboardHisotryEntity[] {
-        console.debug("query history, body=", queryBody)
+        log.debug("query history, body=", queryBody)
         return db.listClipboardHistory(queryBody)
     }
 }
