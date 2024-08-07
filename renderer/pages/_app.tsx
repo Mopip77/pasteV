@@ -1,28 +1,10 @@
-"use client";
-import React, { useState } from "react";
+import React from "react";
+import type { AppProps } from "next/app";
 
-import Header from "@/components/Header";
 import "../styles/globals.css";
-import Content from "@/components/Content";
-import Footer from "@/components/Footer";
-import { SearchBody } from "@/types/types";
 
-export default function HomePage() {
-  const [searchBody, setSearchBody] = useState<SearchBody>({
-    keyword: "",
-  });
-
-  return (
-    <div className="h-full divide-y divide-gray-300">
-      <div className="h-[3rem]">
-        <Header setSearchBody={setSearchBody} />
-      </div>
-      <div className="h-[calc(100vh-5rem)]">
-        <Content searchBody={searchBody} />
-      </div>
-      <div className="h-[2rem]">
-        <Footer />
-      </div>
-    </div>
-  );
+function MyApp({ Component, pageProps }: AppProps) {
+  return <Component {...pageProps} />;
 }
+
+export default MyApp;

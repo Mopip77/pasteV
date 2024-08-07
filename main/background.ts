@@ -8,6 +8,8 @@ import { registerHandlers } from "./helpers/ipc-handlers";
 
 const isProd = process.env.NODE_ENV === "production";
 
+console.log("background process started");
+
 if (isProd) {
   serve({ directory: "app" });
 } else {
@@ -15,9 +17,9 @@ if (isProd) {
 }
 
 (async () => {
-  initSingletons();
-  startReadingClipboardDaemon();
-  registerHandlers(ipcMain);
+  // initSingletons();
+  // startReadingClipboardDaemon();
+  // registerHandlers(ipcMain);
 
   await app.whenReady();
 
@@ -31,11 +33,11 @@ if (isProd) {
   });
 
   if (isProd) {
-    await mainWindow.loadURL("app://./");
+    await mainWindow.loadURL("app://./home");
   } else {
     mainWindow.webContents.openDevTools();
     const port = process.argv[2];
-    await mainWindow.loadURL(`http://localhost:${port}/`);
+    await mainWindow.loadURL(`http://localhost:${port}/home`);
   }
 
   if (isProd) {
@@ -53,6 +55,10 @@ if (isProd) {
       mainWindow.webContents.send("app:show");
     }
   });
+
+  initSingletons();
+  startReadingClipboardDaemon();
+  registerHandlers(ipcMain);
 })();
 
 app.on("window-all-closed", () => {

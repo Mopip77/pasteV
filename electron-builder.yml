@@ -1,12 +1,13 @@
-appId: com.example.nextron
-productName: My Nextron App
-copyright: Copyright © 2018 Yoshihide Shiono
+appId: cc.x7c.pastV
+productName: pastV
+copyright: Copyright © 2024 mopip77
 directories:
   output: dist
   buildResources: resources
 files:
   - from: .
     filter:
+      - build
       - package.json
       - app
 publish: null
