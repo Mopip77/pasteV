@@ -28,6 +28,7 @@ if (isProd) {
   const mainWindow = createWindow("main", {
     width: 1000,
     height: 600,
+    center: true,
     frame: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -48,10 +49,12 @@ if (isProd) {
     });
   }
 
-  globalShortcut.register("CommandOrControl+Shift+H", () => {
+  const shortcutKey = isProd ? "CommandOrControl+Shift+H" : "CommandOrControl+Shift+J";
+  globalShortcut.register(shortcutKey, () => {
     if (mainWindow.isVisible()) {
       mainWindow.hide();
     } else {
+      mainWindow.setVisibleOnAllWorkspaces(true);
       mainWindow.show();
       mainWindow.focus();
       mainWindow.webContents.send("app:show");

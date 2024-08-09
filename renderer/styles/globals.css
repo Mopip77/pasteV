@@ -85,4 +85,8 @@
   .scrollbar-gutter-stable {
     scrollbar-gutter: stable;
   }
+
+  .electron-draggable {
+    -webkit-app-region: drag;
+  }
 }

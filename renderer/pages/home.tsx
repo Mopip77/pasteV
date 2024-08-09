@@ -20,7 +20,7 @@ export default function HomePage() {
         <Content searchBody={searchBody} />
       </div>
       <div className="h-[2rem]">
-        <Footer />
+        <Footer className="electron-draggable" />
       </div>
     </div>
   );
