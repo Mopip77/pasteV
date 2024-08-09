@@ -32,5 +32,5 @@ export const startReadingClipboardDaemon = () => {
         }
 
         cache.add(entity)
-    }, 5000)
+    }, 1000)
 }
