@@ -6,6 +6,15 @@ interface ClipboardHisotryEntity {
     hashKey: string
     createTime: string
     lastReadTime: string
+    // json format
+    details: string
+}
+
+interface ClipboardHistoryEntityDetail {
+    // For image
+    width?: number
+    // For image
+    height?: number
 }
 
 interface ListClipboardHistoryQuery {

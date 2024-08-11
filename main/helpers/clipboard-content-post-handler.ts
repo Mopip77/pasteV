@@ -2,6 +2,7 @@ import { ClipboardHisotryEntity } from "main/db/schemes";
 import { ocr } from "./ocr";
 import { db } from "main/components/singletons";
 import log from "electron-log/main";
+import { readPngMetadata } from "./image-utils";
 
 export async function postHandleClipboardContent(item: ClipboardHisotryEntity) {
     if (item.type === 'image') {
@@ -14,6 +15,18 @@ export async function postHandleClipboardContent(item: ClipboardHisotryEntity) {
             }
             ).catch(err => {
                 log.error("[post-handler] Ocr error=", err)
+            })
+        readPngMetadata(item.blob)
+            .then(metadata => {
+                item.details = JSON.stringify({
+                    ...JSON.parse(item.details),
+                    width: metadata.width,
+                    height: metadata.height
+                })
+                db.updateClipboardHistoryDetails(item.hashKey, item.details)
+            })
+            .catch(err => {
+                log.error("[post-handler] Metadata error=", err)
             })
     }
 }

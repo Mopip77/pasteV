@@ -28,7 +28,8 @@ export const startReadingClipboardDaemon = () => {
             blob: blob,
             hashKey: generateHashKey(clipboardData),
             createTime: now,
-            lastReadTime: now
+            lastReadTime: now,
+            details: '{}'
         }
 
         cache.add(entity)
