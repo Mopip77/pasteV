@@ -20,6 +20,7 @@ interface ClipboardHistoryEntityDetail {
 interface ListClipboardHistoryQuery {
     keyword?: string
     regex?: boolean
+    type?: sting
     offset?: number
     size: number
 }

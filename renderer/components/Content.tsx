@@ -3,7 +3,6 @@ import { ClipboardHisotryEntity } from "@/../main/db/schemes";
 import { SearchBody } from "@/types/types";
 import "highlight.js/styles/default.css";
 import React, {
-  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -30,6 +29,7 @@ const Content = ({ searchBody }: IProps) => {
     offset = 0,
     size = batchSize,
     regex = false,
+    type = '',
   } = {}) => {
     console.debug(
       "fetchHistory, keyword=",
@@ -39,12 +39,15 @@ const Content = ({ searchBody }: IProps) => {
       "size=",
       size,
       "regex=",
-      regex
+      regex,
+      "type=",
+      type
     );
     setLoadingHistory(true);
     const result = await global.window.ipc.invoke("clipboard:query", {
       keyword,
       regex,
+      type,
       offset,
       size,
     });
@@ -68,6 +71,7 @@ const Content = ({ searchBody }: IProps) => {
       offset: 0,
       size: batchSize,
       regex: searchBody.config?.regex,
+      type: searchBody.config?.type,
     }).then((result: ClipboardHisotryEntity[]) => {
       setHistories(result);
     });

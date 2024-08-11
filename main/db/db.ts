@@ -82,6 +82,11 @@ class DatabaseManager {
             keywordFilterClause = query.regex ? "AND (text REGEXP ?)" : "AND (text LIKE CONCAT('%', ?, '%'))"
         }
 
+        if (query.type) {
+            queryParams.push(query.type)
+            keywordFilterClause += "AND (type = ?)"
+        }
+
         const querySql = this.db.prepare(`
             SELECT id, type, text, blob, hash_key, create_time, last_read_time, details
             FROM clipboard_history

@@ -1,5 +1,6 @@
 interface SearchConfig {
     regex: boolean
+    type: string
 }
 
 interface SearchBody {
