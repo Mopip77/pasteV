@@ -2,7 +2,13 @@
 import { ClipboardHisotryEntity } from "@/../main/db/schemes";
 import { SearchBody } from "@/types/types";
 import "highlight.js/styles/default.css";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 interface IProps {
   searchBody: SearchBody;
@@ -25,7 +31,16 @@ const Content = ({ searchBody }: IProps) => {
     size = batchSize,
     regex = false,
   } = {}) => {
-    console.debug("fetchHistory, keyword=", keyword, "offset=", offset, "size=", size, "regex=", regex);
+    console.debug(
+      "fetchHistory, keyword=",
+      keyword,
+      "offset=",
+      offset,
+      "size=",
+      size,
+      "regex=",
+      regex
+    );
     setLoadingHistory(true);
     const result = await global.window.ipc.invoke("clipboard:query", {
       keyword,
@@ -133,10 +148,20 @@ const Content = ({ searchBody }: IProps) => {
   };
 
   const generateSummary = (item: ClipboardHisotryEntity): string => {
-    return item.type === "image" ? "Image..." : item.text;
+    if (item.type === "image") {
+      let summary = "Image";
+      const detailJson = JSON.parse(item.details);
+      if (detailJson.width && detailJson.height) {
+        summary += ` (${detailJson.width}x${detailJson.height})`;
+      } else {
+        summary += "...";
+      }
+      return summary;
+    }
+    return item.text;
   };
 
-  const renderDetail = (item: ClipboardHisotryEntity) => {
+  const renderContent = (item: ClipboardHisotryEntity) => {
     if (item?.type === "image" && item.blob) {
       const base64String = Buffer.from(item.blob).toString("base64");
       return <img src={`data:image/png;base64,${base64String}`} alt="Detail" />;
@@ -162,9 +187,46 @@ const Content = ({ searchBody }: IProps) => {
     }
   };
 
-  const showDetail = useMemo(() => {
+  const generateDetails = (
+    item: ClipboardHisotryEntity
+  ): { label: string; value: string }[] => {
+    return [
+      {
+      label: '类型',
+      value: item.type,
+      },
+      {
+      label: "上次使用时间",
+      value: new Date(item.lastReadTime).toLocaleString(),
+      },
+      {
+      label: "创建时间",
+      value: new Date(item.createTime).toLocaleString(),
+      },
+    ];
+  };
+
+  const showContent = useMemo(() => {
     if (selectedIndex >= 0) {
-      return renderDetail(histories[selectedIndex]);
+      return renderContent(histories[selectedIndex]);
+    }
+  }, [selectedIndex]);
+
+  const showDetails = useMemo(() => {
+    if (selectedIndex >= 0) {
+      return (
+        <ul className="flex flex-col divide-y divide-gray-300">
+          {generateDetails(histories[selectedIndex]).map((item, index) => (
+            <li
+              key={index}
+              className="w-full text-sm text-gray-500 flex justify-between px-2 py-1"
+            >
+              <span className="font-bold">{item.label}</span>
+              <span>{item.value}</span>
+            </li>
+          ))}
+        </ul>
+      );
     }
   }, [selectedIndex]);
 
@@ -205,9 +267,9 @@ const Content = ({ searchBody }: IProps) => {
       </ul>
       <div className="w-3/5 divide-y divide-gray-200">
         <div className="h-1/2 overflow-hidden hover:overflow-auto py-2 px-2 scrollbar-thin scrollbar-gutter-stable scrollbar-track-transparent scrollbar-thumb-slate-400 scrollbar-thumb-round-full">
-          {showDetail}
+          {showContent}
         </div>
-        <div className="h-1/2">details</div>
+        <div className="h-1/2 flex flex-col-reverse">{showDetails}</div>
       </div>
     </div>
   );
