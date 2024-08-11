@@ -106,6 +106,17 @@ class DatabaseManager {
         )
     }
 
+    public updateClipboardHistoryText(hashKey: string, text: string) {
+        const sql = this.db.prepare(`
+            UPDATE clipboard_history SET text = ? WHERE hash_key = ?
+            `);
+
+        sql.run(
+            text,
+            hashKey
+        )
+    }
+
 }
 
 export default DatabaseManager

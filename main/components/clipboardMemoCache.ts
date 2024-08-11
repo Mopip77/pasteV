@@ -2,6 +2,7 @@ import log from "electron-log/main";
 import { ClipboardHisotryEntity, ListClipboardHistoryQuery } from "../db/schemes";
 import { db } from "./singletons";
 import { LinkedDictionary } from 'typescript-collections';
+import { postHandleClipboardContent } from "main/helpers/clipboard-content-post-handler";
 
 class ClipboardMemoCache {
 
@@ -35,6 +36,7 @@ class ClipboardMemoCache {
             db.updateClipboardHistoryLastReadTime(data.hashKey, data.lastReadTime)
         } else {
             db.insertClipboardHistory(data)
+            postHandleClipboardContent(data)
         }
         this.caches.setValue(data.hashKey, data)
         this.last = data
