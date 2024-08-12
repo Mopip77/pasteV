@@ -351,7 +351,7 @@ const Content = ({ searchBody }: IProps) => {
         {histories.length > 0 &&
           histories.map((item, index) => (
             <li
-              key={item.id}
+              key={item.hashKey}
               ref={(el) => {
                 listRefs.current[index] = el;
               }}
