@@ -1,7 +1,8 @@
-import { BrowserWindow, Event } from "electron"
+import { BrowserWindow, Event, ipcMain } from "electron"
 import { cache } from "main/components/singletons"
 import { ClipboardHisotryEntity, ListClipboardHistoryQuery } from "main/db/schemes"
 import { writeClipboard } from "main/utils/clipboard"
+import { exec } from "child_process"
 
 export const registerHandlers = (ipcMain) => {
     ipcMain.on('app:hide', () => {
@@ -14,4 +15,6 @@ export const registerHandlers = (ipcMain) => {
     ipcMain.handle('clipboard:query', (event: Event, query: ListClipboardHistoryQuery) => cache.query(query))
     // clipboard insert
     ipcMain.handle('clipboard:add', (event: Event, entity: ClipboardHisotryEntity) => writeClipboard({ type: entity.type, text: entity.text, blob: entity.blob }))
+    // system
+    ipcMain.on('system:openUrl', (event: Event, url: string) => { exec(`open ${url}`) })
 }

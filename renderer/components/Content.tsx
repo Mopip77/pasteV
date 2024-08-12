@@ -5,8 +5,15 @@ import hljs from "highlight.js";
 import "highlight.js/styles/default.css";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Toggle } from "./ui/toggle";
-import { HeadingIcon } from "lucide-react";
+import { HeadingIcon, LucideExternalLink } from "lucide-react";
 import { HIGHLIGHT_LANGUAGES } from "@/lib/consts";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
+import { Button } from "./ui/button";
 
 interface IProps {
   searchBody: SearchBody;
@@ -301,6 +308,40 @@ const Content = ({ searchBody }: IProps) => {
     }
   }, [selectedIndex]);
 
+  const showContentHelpButtons = useMemo(() => {
+    if (highlightInfo && !highlightInfo.error && highlightInfo.language) {
+      const displaies = [
+        <Toggle onPressedChange={setShowHighlight}>
+          <HeadingIcon className="h-4 w-4" />
+        </Toggle>,
+      ];
+      if (highlightInfo.language === "json") {
+        const jsonEditorBtn = (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  onClick={() => {
+                    reCopy(histories[selectedIndex]);
+                    window.ipc.send("system:openUrl", "https://jsont.run/");
+                  }}
+                >
+                  <LucideExternalLink className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>复制并打开json编辑器</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        );
+        displaies.push(jsonEditorBtn);
+      }
+      return displaies;
+    }
+  }, [selectedIndex, highlightInfo]);
+
   return (
     <div className="flex h-full divide-x divide-gray-200">
       <ul
@@ -343,16 +384,7 @@ const Content = ({ searchBody }: IProps) => {
           </div>
           <div className="relative bottom-10">
             <div className="flex flex-row-reverse bg-transparent z-20">
-              {highlightInfo &&
-                !highlightInfo.error &&
-                highlightInfo.language && (
-                  <Toggle
-                    onPressedChange={setShowHighlight}
-                    aria-label="Toggle bold"
-                  >
-                    <HeadingIcon className="h-4 w-4" />
-                  </Toggle>
-                )}
+              {showContentHelpButtons}
             </div>
           </div>
         </div>
