@@ -225,9 +225,20 @@ const Content = ({ searchBody }: IProps) => {
     if (item?.type === "image" && item.blob) {
       const base64String = Buffer.from(item.blob).toString("base64");
       return (
-        <TransformWrapper smooth={false} wheel={{ step: 0.1 }}>
-          <TransformComponent wrapperStyle={{ width: "100%", height: "100%" }} contentStyle={{ width: "100%", height: "100%" }}>
-            <img className="object-contain object-left-top" src={`data:image/png;base64,${base64String}`} alt="Detail" />
+        <TransformWrapper
+          smooth={false}
+          wheel={{ step: 0.1 }}
+          doubleClick={{ mode: "toggle" }}
+        >
+          <TransformComponent
+            wrapperStyle={{ width: "100%", height: "100%" }}
+            contentStyle={{ width: "100%", height: "100%" }}
+          >
+            <img
+              className="object-contain object-left-top"
+              src={`data:image/png;base64,${base64String}`}
+              alt="Detail"
+            />
           </TransformComponent>
         </TransformWrapper>
       );
