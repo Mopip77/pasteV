@@ -110,9 +110,7 @@ const Content = ({ searchBody }: IProps) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "ArrowDown") {
-        handleSelectionChange((prevIndex) =>
-          Math.min(prevIndex + 1, histories.length - 1)
-        );
+        handleSelectionChange((prevIndex) => Math.min(prevIndex + 1, histories.length - 1));
         setHidePointer(true);
         setMouseIndex(-1);
       } else if (event.key === "ArrowUp") {
@@ -135,7 +133,7 @@ const Content = ({ searchBody }: IProps) => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("mousemove", handleMouseMove);
     };
-  }, []);
+  }, [selectedIndex, histories]);
 
   // scroll to selected index
   useEffect(() => {
@@ -148,7 +146,7 @@ const Content = ({ searchBody }: IProps) => {
 
   // async generate highlight info
   useEffect(() => {
-    console.log("async generate highlight info", selectedIndex);
+    console.debug("async generate highlight info", selectedIndex);
     if (selectedIndex >= 0) {
       if (highlightGereratorAbortController.current) {
         highlightGereratorAbortController.current.abort();
