@@ -401,9 +401,18 @@ const Content = ({ searchBody }: IProps) => {
     if (histories[selectedIndex].type === "text") {
       if (highlightInfo && !highlightInfo.error && highlightInfo.language) {
         const displaies = [
-          <Toggle className="" onPressedChange={setShowHighlight}>
-            <HeadingIcon className="h-4 w-4" />
-          </Toggle>,
+          <TooltipProvider>
+            <Tooltip delayDuration={100}>
+              <TooltipTrigger>
+                <Toggle className="" onPressedChange={setShowHighlight}>
+                  <HeadingIcon className="h-4 w-4" />
+                </Toggle>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>高亮格式化 <span className="font-bold italic">{highlightInfo.language}</span> 内容</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>,
         ];
         if (highlightInfo.language === "json") {
           const jsonEditorBtn = (
