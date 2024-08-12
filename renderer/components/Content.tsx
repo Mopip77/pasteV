@@ -5,7 +5,7 @@ import hljs from "highlight.js";
 import "highlight.js/styles/default.css";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Toggle } from "./ui/toggle";
-import { HeadingIcon, LucideExternalLink } from "lucide-react";
+import { HeadingIcon, LucideExternalLink, ScanTextIcon } from "lucide-react";
 import { HIGHLIGHT_LANGUAGES } from "@/lib/consts";
 import {
   Tooltip,
@@ -38,6 +38,7 @@ const Content = ({ searchBody }: IProps) => {
     null
   );
   const [showHighlight, setShowHighlight] = useState<boolean>(false);
+  const [showOcrResult, setShowOcrResult] = useState<boolean>(false);
   const listRefs = useRef<(HTMLLIElement | null)[]>([]);
 
   const batchSize = 40;
@@ -110,7 +111,9 @@ const Content = ({ searchBody }: IProps) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "ArrowDown") {
-        handleSelectionChange((prevIndex) => Math.min(prevIndex + 1, histories.length - 1));
+        handleSelectionChange((prevIndex) =>
+          Math.min(prevIndex + 1, histories.length - 1)
+        );
         setHidePointer(true);
         setMouseIndex(-1);
       } else if (event.key === "ArrowUp") {
@@ -173,6 +176,7 @@ const Content = ({ searchBody }: IProps) => {
   const handleSelectionChange = (index: React.SetStateAction<number>) => {
     setSelectedIndex(index);
     setShowHighlight(false);
+    setShowOcrResult(false);
     setHighlightInfo(undefined);
   };
 
@@ -270,11 +274,18 @@ const Content = ({ searchBody }: IProps) => {
   };
 
   const showContent = useMemo(() => {
-    console.log("re render showContent", selectedIndex, showHighlight);
+    console.log("re render content", selectedIndex, showHighlight, showOcrResult);
     if (selectedIndex >= 0) {
       if (showHighlight) {
         if (highlightInfo?.error) {
-          return <pre>{highlightInfo.error.message}</pre>;
+          return (
+            <pre
+              style={{ fontFamily: "inherit" }}
+              className="whitespace-pre-wrap"
+            >
+              {highlightInfo.error.message}
+            </pre>
+          );
         }
         return (
           <pre
@@ -283,10 +294,19 @@ const Content = ({ searchBody }: IProps) => {
             dangerouslySetInnerHTML={{ __html: highlightInfo.highlightHtml }}
           ></pre>
         );
+      } else if (showOcrResult) {
+        return (
+          <pre
+            style={{ fontFamily: "inherit" }}
+            className="whitespace-pre-wrap"
+          >
+            {histories[selectedIndex].text}
+          </pre>
+        );
       }
       return renderContent(histories[selectedIndex]);
     }
-  }, [selectedIndex, showHighlight]);
+  }, [selectedIndex, showHighlight, showOcrResult]);
 
   const showDetails = useMemo(() => {
     if (selectedIndex >= 0) {
@@ -307,36 +327,61 @@ const Content = ({ searchBody }: IProps) => {
   }, [selectedIndex]);
 
   const showContentHelpButtons = useMemo(() => {
-    if (highlightInfo && !highlightInfo.error && highlightInfo.language) {
-      const displaies = [
-        <Toggle className="" onPressedChange={setShowHighlight}>
-          <HeadingIcon className="h-4 w-4" />
-        </Toggle>,
-      ];
-      if (highlightInfo.language === "json") {
-        const jsonEditorBtn = (
+    if (selectedIndex < 0) {
+      return;
+    }
+
+    if (histories[selectedIndex].type === "image") {
+      if (histories[selectedIndex].text) {
+        return (
           <TooltipProvider>
             <Tooltip delayDuration={100}>
               <TooltipTrigger asChild>
-                <Button
-                  size="icon"
-                  onClick={() => {
-                    reCopy(histories[selectedIndex]);
-                    window.ipc.send("system:openUrl", "https://jsont.run/");
-                  }}
-                >
-                  <LucideExternalLink className="h-4 w-4" />
-                </Button>
+                <Toggle className="" onPressedChange={setShowOcrResult}>
+                  <ScanTextIcon className="h-4 w-4" />
+                </Toggle>
               </TooltipTrigger>
               <TooltipContent>
-                <p>复制并打开json编辑器</p>
+                <p>展示ocr结果</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         );
-        displaies.push(jsonEditorBtn);
       }
-      return displaies;
+    }
+
+    if (histories[selectedIndex].type === "text") {
+      if (highlightInfo && !highlightInfo.error && highlightInfo.language) {
+        const displaies = [
+          <Toggle className="" onPressedChange={setShowHighlight}>
+            <HeadingIcon className="h-4 w-4" />
+          </Toggle>,
+        ];
+        if (highlightInfo.language === "json") {
+          const jsonEditorBtn = (
+            <TooltipProvider>
+              <Tooltip delayDuration={100}>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    onClick={() => {
+                      reCopy(histories[selectedIndex]);
+                      window.ipc.send("system:openUrl", "https://jsont.run/");
+                    }}
+                  >
+                    <LucideExternalLink className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>复制并打开json编辑器</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          );
+          displaies.push(jsonEditorBtn);
+        }
+        return displaies;
+      }
     }
   }, [selectedIndex, highlightInfo]);
 
