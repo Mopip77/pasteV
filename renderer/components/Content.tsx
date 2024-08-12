@@ -237,7 +237,7 @@ const Content = ({ searchBody }: IProps) => {
     item: ClipboardHisotryEntity
   ): Promise<HighlightResult> => {
     if (item.type !== "text") {
-      return;
+      return undefined;
     }
 
     const highlightResult = hljs.highlightAuto(item?.text, HIGHLIGHT_LANGUAGES);
@@ -274,7 +274,12 @@ const Content = ({ searchBody }: IProps) => {
   };
 
   const showContent = useMemo(() => {
-    console.log("re render content", selectedIndex, showHighlight, showOcrResult);
+    console.log(
+      "re render content",
+      selectedIndex,
+      showHighlight,
+      showOcrResult
+    );
     if (selectedIndex >= 0) {
       if (showHighlight) {
         if (highlightInfo?.error) {
@@ -327,6 +332,7 @@ const Content = ({ searchBody }: IProps) => {
   }, [selectedIndex]);
 
   const showContentHelpButtons = useMemo(() => {
+    console.debug("re render help buttons", selectedIndex, highlightInfo);
     if (selectedIndex < 0) {
       return;
     }
@@ -336,7 +342,7 @@ const Content = ({ searchBody }: IProps) => {
         return (
           <TooltipProvider>
             <Tooltip delayDuration={100}>
-              <TooltipTrigger asChild>
+              <TooltipTrigger>
                 <Toggle className="" onPressedChange={setShowOcrResult}>
                   <ScanTextIcon className="h-4 w-4" />
                 </Toggle>
