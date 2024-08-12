@@ -31,5 +31,6 @@ interface ListClipboardHistoryQuery {
 
 export type {
     ClipboardHisotryEntity,
-    ListClipboardHistoryQuery
+    ListClipboardHistoryQuery,
+    ClipboardHistoryEntityDetail
 }

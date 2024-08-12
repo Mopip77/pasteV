@@ -1,5 +1,8 @@
 "use client";
-import { ClipboardHisotryEntity } from "@/../main/db/schemes";
+import {
+  ClipboardHisotryEntity,
+  ClipboardHistoryEntityDetail,
+} from "@/../main/db/schemes";
 import { SearchBody } from "@/types/types";
 import hljs from "highlight.js";
 import "highlight.js/styles/default.css";
@@ -257,7 +260,7 @@ const Content = ({ searchBody }: IProps) => {
   const generateDetails = (
     item: ClipboardHisotryEntity
   ): { label: string; value: string }[] => {
-    return [
+    const details = [
       {
         label: "类型",
         value: item.type,
@@ -271,6 +274,27 @@ const Content = ({ searchBody }: IProps) => {
         value: new Date(item.createTime).toLocaleString(),
       },
     ];
+
+    const detailObj: ClipboardHistoryEntityDetail = JSON.parse(item.details);
+    if (detailObj.byteLength) {
+      let sizeLabel = `${(detailObj.byteLength / 1024).toFixed(2)} KB`;
+      if (detailObj.byteLength >= 1024 * 1024) {
+        sizeLabel = `${(detailObj.byteLength / (1024 * 1024)).toFixed(2)} MB`;
+      }
+      details.unshift({
+        label: "文件大小",
+        value: sizeLabel,
+      });
+    }
+
+    if (detailObj.wordCount) {
+      details.unshift({
+        label: "单词数",
+        value: detailObj.wordCount.toString(),
+      });
+    }
+
+    return details;
   };
 
   const showContent = useMemo(() => {
