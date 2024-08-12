@@ -5,7 +5,7 @@ import {
 } from "@/../main/db/schemes";
 import { SearchBody } from "@/types/types";
 import hljs from "highlight.js";
-import "highlight.js/styles/default.css";
+import 'highlight.js/styles/github.css';
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Toggle } from "./ui/toggle";
 import { HeadingIcon, LucideExternalLink, ScanTextIcon } from "lucide-react";
