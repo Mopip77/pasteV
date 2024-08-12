@@ -49,7 +49,7 @@ if (isProd) {
     });
   }
 
-  const shortcutKey = isProd ? "CommandOrControl+Shift+H" : "CommandOrControl+Shift+J";
+  const shortcutKey = isProd ? "CommandOrControl+Shift+Option+V" : "CommandOrControl+Shift+J";
   globalShortcut.register(shortcutKey, () => {
     if (mainWindow.isVisible()) {
       mainWindow.hide();
