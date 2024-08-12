@@ -15,6 +15,8 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build
+      - name: Rename
+        run: mv dist/pasteV*.dmg dist/pasteV-${{ github.ref }}.dmg
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
