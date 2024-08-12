@@ -65,7 +65,7 @@ const Header = ({ setSearchBody }: IProps) => {
             }
           }}
         >
-          <SelectTrigger className="w-[180px] focus-visible:ring-transparent">
+          <SelectTrigger className="w-[180px] focus-visible:ring-transparent focus:ring-transparent">
             <SelectValue placeholder="Filter by type" />
           </SelectTrigger>
           <SelectContent>
