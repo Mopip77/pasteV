@@ -8,6 +8,7 @@ import { registerHandlers } from "./helpers/ipc-handlers";
 import log from "electron-log/main";
 
 const isProd = process.env.NODE_ENV === "production";
+let appQuit = false;
 
 log.info("background process started");
 
@@ -51,8 +52,10 @@ if (isProd) {
 
   // Hide the window instead of quitting the app
   mainWindow.on("close", (e) => {
-    e.preventDefault();
-    mainWindow.hide();
+    if (!appQuit) {
+      e.preventDefault();
+      mainWindow.hide();
+    }
   });
 
   const shortcutKey = isProd ? "CommandOrControl+Shift+Option+V" : "CommandOrControl+Shift+J";
@@ -68,6 +71,6 @@ if (isProd) {
   });
 })();
 
-app.on("window-all-closed", () => {
-  app.quit();
+app.on("before-quit", () => {
+  appQuit = true;
 });
