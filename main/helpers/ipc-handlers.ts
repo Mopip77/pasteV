@@ -1,4 +1,4 @@
-import { BrowserWindow, Event, ipcMain } from "electron"
+import { BrowserWindow, Event } from "electron"
 import { cache } from "main/components/singletons"
 import { ClipboardHisotryEntity, ListClipboardHistoryQuery } from "main/db/schemes"
 import { writeClipboard } from "main/utils/clipboard"

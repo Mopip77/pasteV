@@ -21,12 +21,20 @@ export async function postHandleClipboardContent(item: ClipboardHisotryEntity) {
                 item.details = JSON.stringify({
                     ...JSON.parse(item.details),
                     width: metadata.width,
-                    height: metadata.height
+                    height: metadata.height,
+                    byteLength: Buffer.byteLength(item.blob)
                 })
                 db.updateClipboardHistoryDetails(item.hashKey, item.details)
             })
             .catch(err => {
                 log.error("[post-handler] Metadata error=", err)
             })
+    }
+
+    if (item.type === 'text') {
+        item.details = JSON.stringify({
+            wordCount: item.text.split(/\s+/).length
+        })
+        db.updateClipboardHistoryDetails(item.hashKey, item.details)
     }
 }

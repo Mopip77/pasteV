@@ -15,6 +15,10 @@ interface ClipboardHistoryEntityDetail {
     width?: number
     // For image
     height?: number
+    // For image
+    byteLength?: number
+    // For text
+    wordCount?: number
 }
 
 interface ListClipboardHistoryQuery {
