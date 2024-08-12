@@ -311,7 +311,7 @@ const Content = ({ searchBody }: IProps) => {
   const showContentHelpButtons = useMemo(() => {
     if (highlightInfo && !highlightInfo.error && highlightInfo.language) {
       const displaies = [
-        <Toggle onPressedChange={setShowHighlight}>
+        <Toggle className="" onPressedChange={setShowHighlight}>
           <HeadingIcon className="h-4 w-4" />
         </Toggle>,
       ];
@@ -382,8 +382,8 @@ const Content = ({ searchBody }: IProps) => {
           <div className="h-full w-full overflow-x-auto break-words overflow-y-hidden hover:overflow-y-auto py-2 px-2 scrollbar-thin scrollbar-gutter-stable scrollbar-track-transparent scrollbar-thumb-slate-400 scrollbar-thumb-round-full bg-transparent">
             {showContent}
           </div>
-          <div className="relative bottom-10">
-            <div className="flex flex-row-reverse bg-transparent z-20">
+          <div className="relative bottom-12">
+            <div className="flex flex-row-reverse bg-transparent z-20 justify-start items-center py-1 pr-1 gap-2">
               {showContentHelpButtons}
             </div>
           </div>
