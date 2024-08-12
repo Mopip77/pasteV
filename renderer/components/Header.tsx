@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { Separator } from "./ui/separator";
 
 interface IProps {
   setSearchBody: (body: SearchBody) => void;
@@ -33,14 +34,15 @@ const Header = ({ setSearchBody }: IProps) => {
   }, [keyword, regex, type]);
 
   return (
-    <div className="fixed w-full flex items-center h-12">
+    <div className="fixed w-full flex items-center h-12 pr-2">
       <Input
         className="h-full focus-visible:ring-transparent focus-visible:ring-offset-transparent border-none"
         placeholder="Input to search..."
         onChange={(e) => setSerchKeyword(e.target.value)}
       />
-      <Toggle
-        className={`
+      <div className="flex gap-1">
+        <Toggle
+          className={`
           ${
             keyword.length === 0
               ? "opacity-0 pointer-events-none cursor-default"
@@ -48,22 +50,45 @@ const Header = ({ setSearchBody }: IProps) => {
           }
           ease-in-out duration-500 transition-opacity
         `}
-        onPressedChange={setRegex}
-      >
-        <Regex />
-      </Toggle>
-      <Select onValueChange={setType}>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Filter by type" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectItem value="text">文本</SelectItem>
-            <SelectItem value="image">图片</SelectItem>
-            <SelectItem value="file">文件</SelectItem>
-          </SelectGroup>
-        </SelectContent>
-      </Select>
+          onPressedChange={setRegex}
+        >
+          <Regex />
+        </Toggle>
+        <Select
+          value={type}
+          onValueChange={(value) => {
+            console.log("value", value);
+            if (value === "all") {
+              setType("");
+            } else {
+              setType(value);
+            }
+          }}
+        >
+          <SelectTrigger className="w-[180px] focus-visible:ring-transparent">
+            <SelectValue placeholder="Filter by type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem key="text" value="text">
+                文本
+              </SelectItem>
+              <SelectItem key="image" value="image">
+                图片
+              </SelectItem>
+              <SelectItem key="file" value="file">
+                文件
+              </SelectItem>
+            </SelectGroup>
+            <Separator />
+            <SelectGroup>
+              <SelectItem key="all" value="all">
+                ALL
+              </SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 };
