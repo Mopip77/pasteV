@@ -316,7 +316,7 @@ const Content = ({ searchBody }: IProps) => {
       if (highlightInfo.language === "json") {
         const jsonEditorBtn = (
           <TooltipProvider>
-            <Tooltip>
+            <Tooltip delayDuration={100}>
               <TooltipTrigger asChild>
                 <Button
                   size="icon"
