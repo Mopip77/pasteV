@@ -2,8 +2,6 @@ name: Build
 
 on:
   push:
-    branches:
-      - "ci-test"
     tags:
       - "*"
 
@@ -21,4 +19,3 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: dist/pasteV.*.dmg
-          name: ${{ github.ref_name }}
