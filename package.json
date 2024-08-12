@@ -2,7 +2,7 @@
   "private": true,
   "name": "paste-v",
   "description": "clipboard history management utils.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "mopip77 <v@x7c.cc>",
   "main": "app/background.js",
   "scripts": {
