@@ -1,16 +1,21 @@
 "use client";
 import { ClipboardHisotryEntity } from "@/../main/db/schemes";
 import { SearchBody } from "@/types/types";
+import hljs from "highlight.js";
 import "highlight.js/styles/default.css";
-import React, {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Toggle } from "./ui/toggle";
+import { HeadingIcon } from "lucide-react";
+import { HIGHLIGHT_LANGUAGES } from "@/lib/consts";
 
 interface IProps {
   searchBody: SearchBody;
+}
+
+interface HighlightResult {
+  error?: Error;
+  highlightHtml?: string;
+  language?: string;
 }
 
 const Content = ({ searchBody }: IProps) => {
@@ -20,6 +25,12 @@ const Content = ({ searchBody }: IProps) => {
   const [hidePointer, setHidePointer] = useState<boolean>(false);
   const [loadingHistory, setLoadingHistory] = useState<boolean>(false);
   const [noMoreHistory, setNoMoreHistory] = useState<boolean>(false);
+  const [highlightInfo, setHighlightInfo] =
+    useState<HighlightResult>(undefined);
+  const highlightGereratorAbortController = useRef<AbortController | null>(
+    null
+  );
+  const [showHighlight, setShowHighlight] = useState<boolean>(false);
   const listRefs = useRef<(HTMLLIElement | null)[]>([]);
 
   const batchSize = 40;
@@ -29,7 +40,7 @@ const Content = ({ searchBody }: IProps) => {
     offset = 0,
     size = batchSize,
     regex = false,
-    type = '',
+    type = "",
   } = {}) => {
     console.debug(
       "fetchHistory, keyword=",
@@ -61,7 +72,7 @@ const Content = ({ searchBody }: IProps) => {
   };
 
   const initComponent = async () => {
-    setSelectedIndex(-1);
+    handleSelectionChange(-1);
     setHistories([]);
     setMouseIndex(-1);
     setHidePointer(false);
@@ -92,13 +103,13 @@ const Content = ({ searchBody }: IProps) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "ArrowDown") {
-        setSelectedIndex((prevIndex) =>
+        handleSelectionChange((prevIndex) =>
           Math.min(prevIndex + 1, histories.length - 1)
         );
         setHidePointer(true);
         setMouseIndex(-1);
       } else if (event.key === "ArrowUp") {
-        setSelectedIndex((prevIndex) => Math.max(prevIndex - 1, 0));
+        handleSelectionChange((prevIndex) => Math.max(prevIndex - 1, 0));
         setHidePointer(true);
         setMouseIndex(-1);
       } else if (event.key === "Enter") {
@@ -117,7 +128,7 @@ const Content = ({ searchBody }: IProps) => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("mousemove", handleMouseMove);
     };
-  }, [selectedIndex, histories]);
+  }, []);
 
   // scroll to selected index
   useEffect(() => {
@@ -127,6 +138,38 @@ const Content = ({ searchBody }: IProps) => {
       });
     }
   }, [selectedIndex]);
+
+  // async generate highlight info
+  useEffect(() => {
+    console.log("async generate highlight info", selectedIndex);
+    if (selectedIndex >= 0) {
+      if (highlightGereratorAbortController.current) {
+        highlightGereratorAbortController.current.abort();
+      }
+      highlightGereratorAbortController.current = new AbortController();
+      asyncGenerateHighlightInfo(histories[selectedIndex])
+        .then((result) => {
+          if (!highlightGereratorAbortController.current.signal.aborted) {
+            setHighlightInfo(result);
+          }
+        })
+        .catch((error) => {
+          console.error("highlight error", error);
+          if (!highlightGereratorAbortController.current.signal.aborted) {
+            setHighlightInfo({ error });
+          }
+        });
+    } else {
+      setHighlightInfo(undefined);
+      setShowHighlight(false);
+    }
+  }, [selectedIndex]);
+
+  const handleSelectionChange = (index: React.SetStateAction<number>) => {
+    setSelectedIndex(index);
+    setShowHighlight(false);
+    setHighlightInfo(undefined);
+  };
 
   const handleUlScroll = (event: React.UIEvent<HTMLUListElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
@@ -170,25 +213,36 @@ const Content = ({ searchBody }: IProps) => {
       const base64String = Buffer.from(item.blob).toString("base64");
       return <img src={`data:image/png;base64,${base64String}`} alt="Detail" />;
     } else {
-      const display = item.text;
-      // const highlightResult = hljs.highlightAuto(item?.text);
-      // console.debug("highlightResult, ", highlightResult);
-      // const display =
-      //   highlightResult.errorRaised ||
-      //   !HIGHLIGHT_LANGUAGES.includes(highlightResult.language) ? (
-      //     item.text
-      //   ) : (
-      //     <code
-      //       dangerouslySetInnerHTML={{ __html: highlightResult.value }}
-      //     ></code>
-      //   );
-
       return (
-        <pre style={{ fontFamily: "inherit" }} className="whitespace-pre-wrap">
-          {display}
+        <pre
+          style={{ fontFamily: "inherit" }}
+          className="whitespace-pre-wrap z-10"
+        >
+          {item.text}
         </pre>
       );
     }
+  };
+
+  const asyncGenerateHighlightInfo = async (
+    item: ClipboardHisotryEntity
+  ): Promise<HighlightResult> => {
+    if (item.type !== "text") {
+      return;
+    }
+
+    const highlightResult = hljs.highlightAuto(item?.text, HIGHLIGHT_LANGUAGES);
+    console.debug("highlightResult, ", highlightResult);
+    if (highlightResult.errorRaised) {
+      return {
+        error: highlightResult.errorRaised,
+      };
+    }
+
+    return {
+      highlightHtml: highlightResult.value,
+      language: highlightResult.language,
+    };
   };
 
   const generateDetails = (
@@ -196,25 +250,38 @@ const Content = ({ searchBody }: IProps) => {
   ): { label: string; value: string }[] => {
     return [
       {
-      label: '类型',
-      value: item.type,
+        label: "类型",
+        value: item.type,
       },
       {
-      label: "上次使用时间",
-      value: new Date(item.lastReadTime).toLocaleString(),
+        label: "上次使用时间",
+        value: new Date(item.lastReadTime).toLocaleString(),
       },
       {
-      label: "创建时间",
-      value: new Date(item.createTime).toLocaleString(),
+        label: "创建时间",
+        value: new Date(item.createTime).toLocaleString(),
       },
     ];
   };
 
   const showContent = useMemo(() => {
+    console.log("re render showContent", selectedIndex, showHighlight);
     if (selectedIndex >= 0) {
+      if (showHighlight) {
+        if (highlightInfo?.error) {
+          return <pre>{highlightInfo.error.message}</pre>;
+        }
+        return (
+          <pre
+            style={{ fontFamily: "inherit" }}
+            className="whitespace-pre-wrap"
+            dangerouslySetInnerHTML={{ __html: highlightInfo.highlightHtml }}
+          ></pre>
+        );
+      }
       return renderContent(histories[selectedIndex]);
     }
-  }, [selectedIndex]);
+  }, [selectedIndex, showHighlight]);
 
   const showDetails = useMemo(() => {
     if (selectedIndex >= 0) {
@@ -259,7 +326,7 @@ const Content = ({ searchBody }: IProps) => {
                 setMouseIndex(-1);
               }}
               onClick={() => {
-                setSelectedIndex(index);
+                handleSelectionChange(index);
               }}
               onDoubleClick={() => {
                 reCopy(item);
@@ -270,10 +337,26 @@ const Content = ({ searchBody }: IProps) => {
           ))}
       </ul>
       <div className="w-3/5 divide-y divide-gray-200">
-        <div className="h-1/2 overflow-hidden hover:overflow-auto py-2 px-2 scrollbar-thin scrollbar-gutter-stable scrollbar-track-transparent scrollbar-thumb-slate-400 scrollbar-thumb-round-full">
-          {showContent}
+        <div className="w-full h-2/3">
+          <div className="h-full w-full overflow-x-auto break-words overflow-y-hidden hover:overflow-y-auto py-2 px-2 scrollbar-thin scrollbar-gutter-stable scrollbar-track-transparent scrollbar-thumb-slate-400 scrollbar-thumb-round-full bg-transparent">
+            {showContent}
+          </div>
+          <div className="relative bottom-10">
+            <div className="flex flex-row-reverse bg-transparent z-20">
+              {highlightInfo &&
+                !highlightInfo.error &&
+                highlightInfo.language && (
+                  <Toggle
+                    onPressedChange={setShowHighlight}
+                    aria-label="Toggle bold"
+                  >
+                    <HeadingIcon className="h-4 w-4" />
+                  </Toggle>
+                )}
+            </div>
+          </div>
         </div>
-        <div className="h-1/2 flex flex-col-reverse">{showDetails}</div>
+        <div className="h-1/3 flex flex-col-reverse">{showDetails}</div>
       </div>
     </div>
   );
