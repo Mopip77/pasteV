@@ -49,6 +49,12 @@ if (isProd) {
     });
   }
 
+  // Hide the window instead of quitting the app
+  mainWindow.on("close", (e) => {
+    e.preventDefault();
+    mainWindow.hide();
+  });
+
   const shortcutKey = isProd ? "CommandOrControl+Shift+Option+V" : "CommandOrControl+Shift+J";
   globalShortcut.register(shortcutKey, () => {
     if (mainWindow.isVisible()) {
