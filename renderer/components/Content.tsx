@@ -6,6 +6,7 @@ import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Toggle } from "./ui/toggle";
 import { HeadingIcon, LucideExternalLink } from "lucide-react";
 import { HIGHLIGHT_LANGUAGES } from "@/lib/consts";
+import log from 'electron-log/renderer';
 import {
   Tooltip,
   TooltipContent,
@@ -14,6 +15,7 @@ import {
 } from "./ui/tooltip";
 import { Button } from "./ui/button";
 import { SearchBodyContext } from "./ClipboardHistory";
+import { throttle } from "@/lib/utils";
 
 interface HighlightResult {
   error?: Error;
@@ -47,7 +49,7 @@ const Content = () => {
     regex = false,
     type = "",
   } = {}) => {
-    console.debug(
+    log.debug(
       "fetchHistory, keyword=",
       keyword,
       "offset=",
@@ -76,22 +78,21 @@ const Content = () => {
     return result;
   };
 
-  const initComponent = async () => {
+  const initComponent = throttle(async () => {
     handleSelectionChange(-1);
     setHistories([]);
     setMouseIndex(-1);
     setHidePointer(false);
     setNoMoreHistory(false);
-    fetchHistory({
+    const results = await fetchHistory({
       keyword: searchBody.keyword,
       offset: 0,
       size: batchSize,
       regex: searchBody.regex,
       type: searchBody.type,
-    }).then((result: ClipboardHisotryEntity[]) => {
-      setHistories(result);
     });
-  };
+    setHistories(results);
+  }, 100000);
 
   // intialize component
   useEffect(() => {
@@ -118,7 +119,7 @@ const Content = () => {
         setHidePointer(true);
         setMouseIndex(-1);
       } else if (event.key === "Enter") {
-        console.log("entered", selectedIndex, histories[selectedIndex]);
+        log.log("entered", selectedIndex, histories[selectedIndex]);
         reCopy(histories[selectedIndex]);
       }
     };
@@ -146,7 +147,7 @@ const Content = () => {
 
   // async generate highlight info
   useEffect(() => {
-    console.debug("async generate highlight info", selectedIndex);
+    log.debug("async generate highlight info", selectedIndex);
     if (selectedIndex >= 0) {
       if (highlightGereratorAbortController.current) {
         highlightGereratorAbortController.current.abort();
@@ -159,7 +160,7 @@ const Content = () => {
           }
         })
         .catch((error) => {
-          console.error("highlight error", error);
+          log.error("highlight error", error);
           if (!highlightGereratorAbortController.current.signal.aborted) {
             setHighlightInfo({ error });
           }
@@ -183,6 +184,7 @@ const Content = () => {
       !loadingHistory &&
       !noMoreHistory
     ) {
+      log.log("fetch more history");
       fetchHistory({
         keyword: searchBody.keyword,
         offset: histories.length,
@@ -241,7 +243,7 @@ const Content = () => {
     }
 
     const highlightResult = hljs.highlightAuto(item?.text, HIGHLIGHT_LANGUAGES);
-    console.debug("highlightResult, ", highlightResult);
+    log.debug("highlightResult, ", highlightResult);
     if (highlightResult.errorRaised) {
       return {
         error: highlightResult.errorRaised,
@@ -274,7 +276,7 @@ const Content = () => {
   };
 
   const showContent = useMemo(() => {
-    console.log("re render showContent", selectedIndex, showHighlight);
+    log.log("re render showContent", selectedIndex, showHighlight);
     if (selectedIndex >= 0) {
       if (showHighlight) {
         if (highlightInfo?.error) {
