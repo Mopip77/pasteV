@@ -1,9 +1,8 @@
 "use client";
 import { ClipboardHisotryEntity } from "@/../main/db/schemes";
-import { SearchBody } from "@/types/types";
 import hljs from "highlight.js";
 import "highlight.js/styles/default.css";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Toggle } from "./ui/toggle";
 import { HeadingIcon, LucideExternalLink } from "lucide-react";
 import { HIGHLIGHT_LANGUAGES } from "@/lib/consts";
@@ -14,10 +13,7 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import { Button } from "./ui/button";
-
-interface IProps {
-  searchBody: SearchBody;
-}
+import { SearchBodyContext } from "./ClipboardHistory";
 
 interface HighlightResult {
   error?: Error;
@@ -25,7 +21,9 @@ interface HighlightResult {
   language?: string;
 }
 
-const Content = ({ searchBody }: IProps) => {
+const Content = () => {
+  const { searchBody, setSearchBody } = useContext(SearchBodyContext);
+
   const [histories, setHistories] = useState<ClipboardHisotryEntity[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [mouseUpIndex, setMouseIndex] = useState<number>(-1);
@@ -88,8 +86,8 @@ const Content = ({ searchBody }: IProps) => {
       keyword: searchBody.keyword,
       offset: 0,
       size: batchSize,
-      regex: searchBody.config?.regex,
-      type: searchBody.config?.type,
+      regex: searchBody.regex,
+      type: searchBody.type,
     }).then((result: ClipboardHisotryEntity[]) => {
       setHistories(result);
     });
@@ -110,7 +108,9 @@ const Content = ({ searchBody }: IProps) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "ArrowDown") {
-        handleSelectionChange((prevIndex) => Math.min(prevIndex + 1, histories.length - 1));
+        handleSelectionChange((prevIndex) =>
+          Math.min(prevIndex + 1, histories.length - 1)
+        );
         setHidePointer(true);
         setMouseIndex(-1);
       } else if (event.key === "ArrowUp") {
@@ -187,7 +187,7 @@ const Content = ({ searchBody }: IProps) => {
         keyword: searchBody.keyword,
         offset: histories.length,
         size: batchSize,
-        regex: searchBody.config?.regex,
+        regex: searchBody.regex,
       }).then((moreHistories: ClipboardHisotryEntity[]) => {
         setHistories((prevHistories) => [...prevHistories, ...moreHistories]);
       });
@@ -197,6 +197,10 @@ const Content = ({ searchBody }: IProps) => {
   const reCopy = async (item: ClipboardHisotryEntity) => {
     window.ipc.invoke("clipboard:add", item);
     window.ipc.send("app:hide", "");
+    setSearchBody((prev) => ({
+      ...prev,
+      keyword: "",
+    }));
   };
 
   const generateSummary = (item: ClipboardHisotryEntity): string => {
@@ -317,7 +321,7 @@ const Content = ({ searchBody }: IProps) => {
         const jsonEditorBtn = (
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger asChild>
+              <TooltipTrigger>
                 <Button
                   size="icon"
                   onClick={() => {

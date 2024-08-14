@@ -1,8 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import { Input } from "./ui/input";
 import { Toggle } from "./ui/toggle";
 import { Regex } from "lucide-react";
-import { SearchBody } from "@/types/types";
 import {
   Select,
   SelectContent,
@@ -12,32 +11,19 @@ import {
   SelectValue,
 } from "./ui/select";
 import { Separator } from "./ui/separator";
+import { SearchBodyContext } from "./ClipboardHistory";
 
-interface IProps {
-  setSearchBody: (body: SearchBody) => void;
-}
+const Header = () => {
+  const { searchBody, setSearchBody } = useContext(SearchBodyContext);
 
-const Header = ({ setSearchBody }: IProps) => {
-  const [keyword, setSerchKeyword] = React.useState<string>("");
-  const [regex, setRegex] = React.useState<boolean>(false);
-  const [type, setType] = React.useState<string>("");
   const inputRef = React.useRef<HTMLInputElement>(null);
 
+  // intialize component
   useEffect(() => {
-    console.log("set search body", keyword, regex);
-    setSearchBody({
-      keyword,
-      config: {
-        regex,
-        type,
-      },
+    window.ipc.on("app:show", () => {
+      inputRef.current?.focus();
     });
-  }, [keyword, regex, type]);
-
-    // intialize component
-    useEffect(() => {
-      window.ipc.on("app:show", () => {inputRef.current?.focus()});
-    }, []);
+  }, []);
 
   return (
     <div className="fixed w-full flex items-center h-12 pr-2">
@@ -45,30 +31,47 @@ const Header = ({ setSearchBody }: IProps) => {
         className="h-full focus-visible:ring-transparent focus-visible:ring-offset-transparent border-none"
         placeholder="Input to search..."
         ref={inputRef}
-        onChange={(e) => setSerchKeyword(e.target.value)}
+        value={searchBody.keyword}
+        onChange={(e) =>
+          setSearchBody((prev) => ({
+            ...prev,
+            keyword: e.target.value,
+          }))
+        }
       />
       <div className="flex gap-1">
         <Toggle
           className={`
           ${
-            keyword.length === 0
+            searchBody.keyword.length === 0
               ? "opacity-0 pointer-events-none cursor-default"
               : ""
           }
           ease-in-out duration-500 transition-opacity
         `}
-          onPressedChange={setRegex}
+          onPressedChange={(pressed) => {
+            setSearchBody((prev) => ({
+              ...prev,
+              regex: pressed,
+            }));
+          }}
         >
           <Regex />
         </Toggle>
         <Select
-          value={type}
+          value={searchBody.type}
           onValueChange={(value) => {
             console.log("value", value);
             if (value === "all") {
-              setType("");
+              setSearchBody((prev) => ({
+                ...prev,
+                type: "",
+              }));
             } else {
-              setType(value);
+              setSearchBody((prev) => ({
+                ...prev,
+                type: value,
+              }));
             }
           }}
         >
