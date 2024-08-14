@@ -92,7 +92,7 @@ const Content = () => {
       type: searchBody.type,
     });
     setHistories(results);
-  }, 100000);
+  }, 1000);
 
   // intialize component
   useEffect(() => {
