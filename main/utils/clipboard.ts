@@ -32,7 +32,7 @@ export const readClipboard = (): ClipboardData => {
 }
 
 export const writeClipboard = (data: ClipboardData) => {
-    log.debug('writeClipboard', data)
+    log.debug('writeClipboard', data.type, data.text)
     switch (data.type) {
         case 'text':
             clipboard.writeText(data.text!)

@@ -2,11 +2,18 @@
 import { ClipboardHisotryEntity } from "@/../main/db/schemes";
 import hljs from "highlight.js";
 import "highlight.js/styles/default.css";
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Toggle } from "./ui/toggle";
 import { HeadingIcon, LucideExternalLink } from "lucide-react";
 import { HIGHLIGHT_LANGUAGES } from "@/lib/consts";
-import log from 'electron-log/renderer';
+import log from "electron-log/renderer";
 import {
   Tooltip,
   TooltipContent,
@@ -15,7 +22,8 @@ import {
 } from "./ui/tooltip";
 import { Button } from "./ui/button";
 import { SearchBodyContext } from "./ClipboardHistory";
-import { throttle } from "@/lib/utils";
+import { debounce, throttle } from "@/lib/utils";
+import { SearchBody } from "@/types/types";
 
 interface HighlightResult {
   error?: Error;
@@ -92,7 +100,7 @@ const Content = () => {
       type: searchBody.type,
     });
     setHistories(results);
-  }, 1000);
+  }, 500);
 
   // intialize component
   useEffect(() => {
@@ -145,6 +153,24 @@ const Content = () => {
     }
   }, [selectedIndex]);
 
+  const debouncedHighlightFunc = useCallback(
+    debounce(async (item: ClipboardHisotryEntity) => {
+      try {
+        log.debug("start to hilight");
+        const result = await asyncGenerateHighlightInfo(item);
+        if (!highlightGereratorAbortController.current.signal.aborted) {
+          setHighlightInfo(result);
+        }
+      } catch (error) {
+        log.error("highlight error", error);
+        if (!highlightGereratorAbortController.current.signal.aborted) {
+          setHighlightInfo({ error });
+        }
+      }
+    }, 100),
+    []
+  );
+
   // async generate highlight info
   useEffect(() => {
     log.debug("async generate highlight info", selectedIndex);
@@ -153,18 +179,8 @@ const Content = () => {
         highlightGereratorAbortController.current.abort();
       }
       highlightGereratorAbortController.current = new AbortController();
-      asyncGenerateHighlightInfo(histories[selectedIndex])
-        .then((result) => {
-          if (!highlightGereratorAbortController.current.signal.aborted) {
-            setHighlightInfo(result);
-          }
-        })
-        .catch((error) => {
-          log.error("highlight error", error);
-          if (!highlightGereratorAbortController.current.signal.aborted) {
-            setHighlightInfo({ error });
-          }
-        });
+      log.debug("before hilight");
+      debouncedHighlightFunc(histories[selectedIndex]);
     } else {
       setHighlightInfo(undefined);
       setShowHighlight(false);
