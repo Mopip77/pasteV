@@ -221,8 +221,8 @@ const Content = () => {
   };
 
   const reCopy = async (item: ClipboardHisotryEntity) => {
-    window.ipc.invoke("clipboard:add", item);
     window.ipc.send("app:hide", "");
+    window.ipc.invoke("clipboard:add", item, true);
     setSearchBody((prev) => ({
       ...prev,
       keyword: "",
