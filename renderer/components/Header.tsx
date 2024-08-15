@@ -62,6 +62,11 @@ const Header = () => {
             keyword: e.target.value,
           }))
         }
+        onKeyDown={(e) => {
+          if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+            e.preventDefault();
+          }
+        }}
       />
       <div className="flex gap-1">
         <Toggle
