@@ -23,7 +23,6 @@ import {
 import { Button } from "./ui/button";
 import { SearchBodyContext } from "./ClipboardHistory";
 import { debounce, throttle } from "@/lib/utils";
-import { SearchBody } from "@/types/types";
 
 interface HighlightResult {
   error?: Error;
