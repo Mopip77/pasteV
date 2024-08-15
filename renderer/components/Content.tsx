@@ -127,9 +127,6 @@ const Content = () => {
         handleSelectionChange((prevIndex) =>
           Math.min(prevIndex + 1, histories.length - 1)
         );
-        handleSelectionChange((prevIndex) =>
-          Math.min(prevIndex + 1, histories.length - 1)
-        );
         setHidePointer(true);
         setMouseIndex(-1);
       } else if (event.key === "ArrowUp") {
@@ -137,7 +134,6 @@ const Content = () => {
         setHidePointer(true);
         setMouseIndex(-1);
       } else if (event.key === "Enter") {
-        log.log("entered", selectedIndex, histories[selectedIndex]);
         reCopy(histories[selectedIndex]);
       }
     };
