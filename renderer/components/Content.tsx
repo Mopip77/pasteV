@@ -210,12 +210,13 @@ const Content = () => {
       !loadingHistory &&
       !noMoreHistory
     ) {
-      log.log("fetch more history");
+      log.debug("fetch more history");
       fetchHistory({
         keyword: searchBody.keyword,
         offset: histories.length,
         size: batchSize,
         regex: searchBody.regex,
+        type: searchBody.type,
       }).then((moreHistories: ClipboardHisotryEntity[]) => {
         setHistories((prevHistories) => [...prevHistories, ...moreHistories]);
       });
