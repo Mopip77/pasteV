@@ -4,7 +4,7 @@ import {
   ClipboardHistoryEntityDetail,
 } from "@/../main/db/schemes";
 import hljs from "highlight.js";
-import 'highlight.js/styles/github.css';
+import "highlight.js/styles/github.css";
 import React, {
   useCallback,
   useContext,
@@ -130,7 +130,10 @@ const Content = () => {
         setHidePointer(true);
         setMouseIndex(-1);
       } else if (event.key === "ArrowUp") {
-        handleSelectionChange((prevIndex) => Math.max(prevIndex - 1, 0));
+        handleSelectionChange((prevIndex) => {
+          const listIsEmpty = histories.length === 0;
+          return Math.max(prevIndex - 1, listIsEmpty ? -1 : 0);
+        });
         setHidePointer(true);
         setMouseIndex(-1);
       } else if (event.key === "Enter") {
@@ -425,7 +428,13 @@ const Content = () => {
                 </Toggle>
               </TooltipTrigger>
               <TooltipContent>
-                <p>高亮格式化 <span className="font-bold italic">{highlightInfo.language}</span> 内容</p>
+                <p>
+                  高亮格式化
+                  <span className="font-bold italic">
+                    {highlightInfo.language}
+                  </span>
+                  内容
+                </p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>,
