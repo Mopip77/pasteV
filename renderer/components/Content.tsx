@@ -104,6 +104,9 @@ const Content = () => {
       type: searchBody.type,
     });
     setHistories(results);
+    if (results.length > 0) {
+      handleSelectionChange(0);
+    }
   }, 500);
 
   // intialize component
