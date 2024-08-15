@@ -25,6 +25,30 @@ const Header = () => {
     });
   }, []);
 
+  // 如果用户按键但不包含 modifers 则聚焦到搜索框
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 如果当前焦点在输入框内则不处理
+      if (e.target === inputRef.current) {
+        return;
+      }
+
+      if (
+        e.key.length === 1 &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.altKey &&
+        !e.shiftKey
+      ) {
+        inputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
   return (
     <div className="fixed w-full flex items-center h-12 pr-2">
       <Input
