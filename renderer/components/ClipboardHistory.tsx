@@ -1,5 +1,5 @@
 import { SearchBody } from "@/types/types";
-import React, { Dispatch, useContext } from "react";
+import React, { Dispatch } from "react";
 import Header from "./Header";
 import Footer from "./Footer";
 import Content from "./Content";
@@ -15,8 +15,6 @@ const ClipboardHistory = () => {
     regex: false,
     type: "",
   });
-
-  useContext(SearchBodyContext);
 
   return (
     <SearchBodyContext.Provider value={{ searchBody, setSearchBody }}>
