@@ -3,13 +3,20 @@ import {
   ClipboardHisotryEntity,
   ClipboardHistoryEntityDetail,
 } from "@/../main/db/schemes";
-import { SearchBody } from "@/types/types";
 import hljs from "highlight.js";
 import 'highlight.js/styles/github.css';
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Toggle } from "./ui/toggle";
 import { HeadingIcon, LucideExternalLink, ScanTextIcon } from "lucide-react";
 import { HIGHLIGHT_LANGUAGES } from "@/lib/consts";
+import log from "electron-log/renderer";
 import {
   Tooltip,
   TooltipContent,
@@ -18,10 +25,8 @@ import {
 } from "./ui/tooltip";
 import { Button } from "./ui/button";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
-
-interface IProps {
-  searchBody: SearchBody;
-}
+import { SearchBodyContext } from "./ClipboardHistory";
+import { debounce, throttle } from "@/lib/utils";
 
 interface HighlightResult {
   error?: Error;
@@ -29,7 +34,9 @@ interface HighlightResult {
   language?: string;
 }
 
-const Content = ({ searchBody }: IProps) => {
+const Content = () => {
+  const { searchBody, setSearchBody } = useContext(SearchBodyContext);
+
   const [histories, setHistories] = useState<ClipboardHisotryEntity[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [mouseUpIndex, setMouseIndex] = useState<number>(-1);
@@ -54,7 +61,7 @@ const Content = ({ searchBody }: IProps) => {
     regex = false,
     type = "",
   } = {}) => {
-    console.debug(
+    log.debug(
       "fetchHistory, keyword=",
       keyword,
       "offset=",
@@ -83,22 +90,21 @@ const Content = ({ searchBody }: IProps) => {
     return result;
   };
 
-  const initComponent = async () => {
+  const initComponent = throttle(async () => {
     handleSelectionChange(-1);
     setHistories([]);
     setMouseIndex(-1);
     setHidePointer(false);
     setNoMoreHistory(false);
-    fetchHistory({
+    const results = await fetchHistory({
       keyword: searchBody.keyword,
       offset: 0,
       size: batchSize,
-      regex: searchBody.config?.regex,
-      type: searchBody.config?.type,
-    }).then((result: ClipboardHisotryEntity[]) => {
-      setHistories(result);
+      regex: searchBody.regex,
+      type: searchBody.type,
     });
-  };
+    setHistories(results);
+  }, 500);
 
   // intialize component
   useEffect(() => {
@@ -118,6 +124,9 @@ const Content = ({ searchBody }: IProps) => {
         handleSelectionChange((prevIndex) =>
           Math.min(prevIndex + 1, histories.length - 1)
         );
+        handleSelectionChange((prevIndex) =>
+          Math.min(prevIndex + 1, histories.length - 1)
+        );
         setHidePointer(true);
         setMouseIndex(-1);
       } else if (event.key === "ArrowUp") {
@@ -125,7 +134,7 @@ const Content = ({ searchBody }: IProps) => {
         setHidePointer(true);
         setMouseIndex(-1);
       } else if (event.key === "Enter") {
-        console.log("entered", selectedIndex, histories[selectedIndex]);
+        log.log("entered", selectedIndex, histories[selectedIndex]);
         reCopy(histories[selectedIndex]);
       }
     };
@@ -151,26 +160,34 @@ const Content = ({ searchBody }: IProps) => {
     }
   }, [selectedIndex]);
 
+  const debouncedHighlightFunc = useCallback(
+    debounce(async (item: ClipboardHisotryEntity) => {
+      try {
+        log.debug("start to hilight");
+        const result = await asyncGenerateHighlightInfo(item);
+        if (!highlightGereratorAbortController.current.signal.aborted) {
+          setHighlightInfo(result);
+        }
+      } catch (error) {
+        log.error("highlight error", error);
+        if (!highlightGereratorAbortController.current.signal.aborted) {
+          setHighlightInfo({ error });
+        }
+      }
+    }, 100),
+    []
+  );
+
   // async generate highlight info
   useEffect(() => {
-    console.debug("async generate highlight info", selectedIndex);
+    log.debug("async generate highlight info", selectedIndex);
     if (selectedIndex >= 0) {
       if (highlightGereratorAbortController.current) {
         highlightGereratorAbortController.current.abort();
       }
       highlightGereratorAbortController.current = new AbortController();
-      asyncGenerateHighlightInfo(histories[selectedIndex])
-        .then((result) => {
-          if (!highlightGereratorAbortController.current.signal.aborted) {
-            setHighlightInfo(result);
-          }
-        })
-        .catch((error) => {
-          console.error("highlight error", error);
-          if (!highlightGereratorAbortController.current.signal.aborted) {
-            setHighlightInfo({ error });
-          }
-        });
+      log.debug("before hilight");
+      debouncedHighlightFunc(histories[selectedIndex]);
     } else {
       setHighlightInfo(undefined);
       setShowHighlight(false);
@@ -191,11 +208,12 @@ const Content = ({ searchBody }: IProps) => {
       !loadingHistory &&
       !noMoreHistory
     ) {
+      log.log("fetch more history");
       fetchHistory({
         keyword: searchBody.keyword,
         offset: histories.length,
         size: batchSize,
-        regex: searchBody.config?.regex,
+        regex: searchBody.regex,
       }).then((moreHistories: ClipboardHisotryEntity[]) => {
         setHistories((prevHistories) => [...prevHistories, ...moreHistories]);
       });
@@ -205,6 +223,10 @@ const Content = ({ searchBody }: IProps) => {
   const reCopy = async (item: ClipboardHisotryEntity) => {
     window.ipc.invoke("clipboard:add", item);
     window.ipc.send("app:hide", "");
+    setSearchBody((prev) => ({
+      ...prev,
+      keyword: "",
+    }));
   };
 
   const generateSummary = (item: ClipboardHisotryEntity): string => {
@@ -262,7 +284,7 @@ const Content = ({ searchBody }: IProps) => {
     }
 
     const highlightResult = hljs.highlightAuto(item?.text, HIGHLIGHT_LANGUAGES);
-    console.debug("highlightResult, ", highlightResult);
+    log.debug("highlightResult, ", highlightResult);
     if (highlightResult.errorRaised) {
       return {
         error: highlightResult.errorRaised,
@@ -316,12 +338,7 @@ const Content = ({ searchBody }: IProps) => {
   };
 
   const showContent = useMemo(() => {
-    console.log(
-      "re render content",
-      selectedIndex,
-      showHighlight,
-      showOcrResult
-    );
+    log.log("re render showContent", selectedIndex, showHighlight);
     if (selectedIndex >= 0) {
       if (showHighlight) {
         if (highlightInfo?.error) {

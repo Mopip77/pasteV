@@ -10,14 +10,17 @@ import log from "electron-log/main";
 const isProd = process.env.NODE_ENV === "production";
 let appQuit = false;
 
-log.info("background process started");
-
-
 if (isProd) {
   serve({ directory: "app" });
 } else {
   app.setPath("userData", `${app.getPath("userData")} (development)`);
 }
+
+log.initialize();
+log.transports.file.resolvePathFn = () => path.join(app.getPath("userData"), 'logs/main.log');
+log.transports.ipc.level = false;
+
+log.info("background process started");
 
 (async () => {
   initSingletons();

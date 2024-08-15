@@ -1,11 +1,7 @@
-interface SearchConfig {
+interface SearchBody {
+    keyword: string
     regex: boolean
     type: string
 }
 
-interface SearchBody {
-    keyword: string
-    config?: SearchConfig
-}
-
-export type { SearchBody, SearchBody }
+export type { SearchBody }
