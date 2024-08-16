@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/stores/store";
 import { updateAppSettingConfig } from "@/stores/appSettingConfigSlice";
 
-const settings = () => {
+const SettingsPage = () => {
   const appSettingConfig = useSelector(
     (state: RootState) => state.appSettingConfig
   );
@@ -31,4 +31,4 @@ const settings = () => {
   );
 };
 
-export default settings;
+export default SettingsPage;
