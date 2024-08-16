@@ -59,8 +59,9 @@ const SettingsPage = () => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-8 mx-2 my-2"
+        className="space-y-8 mx-4 my-4 h-[75vh] overflow-y-scroll"
       >
+        <h3 className="text-2xl font-bold">应用设置</h3>
         <FormField
           control={form.control}
           name="aiTagEnable"
@@ -130,7 +131,7 @@ const SettingsPage = () => {
               control={form.control}
               name="openaiConfig.apiHost"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="p-2">
                   <FormLabel>OpenAI API Host</FormLabel>
                   <Input {...field} />
                 </FormItem>
@@ -140,7 +141,7 @@ const SettingsPage = () => {
               control={form.control}
               name="openaiConfig.apiKey"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="p-2">
                   <FormLabel>OpenAI API Key</FormLabel>
                   <Input {...field} />
                 </FormItem>
@@ -150,7 +151,7 @@ const SettingsPage = () => {
               control={form.control}
               name="openaiConfig.model"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="p-2">
                   <FormLabel>OpenAI Model</FormLabel>
                   <Input {...field} />
                 </FormItem>
@@ -158,7 +159,7 @@ const SettingsPage = () => {
             />
           </>
         )}
-        <div className="w-full fixed bottom-3">
+        <div className="w-full fixed bottom-20 h-4">
           <div className="w-full flex justify-around">
             <Button variant="secondary" onClick={onCancel}>
               Cancel
