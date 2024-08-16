@@ -245,6 +245,14 @@ const Content = () => {
     }
     return item.text;
   };
+  
+  const generateTags = (item: ClipboardHisotryEntity) => {
+    return JSON.parse(item.details).tags?.map((tag, index) => (
+      <span key={index} className="text-xs bg-gray-200 rounded-sm px-2 py-1 mx-1 w-10 overflow-x-hidden whitespace-nowrap">
+        {tag}
+      </span>
+    ));
+  };
 
   const renderContent = (item: ClipboardHisotryEntity) => {
     if (item?.type === "image" && item.blob) {
@@ -499,7 +507,8 @@ const Content = () => {
                 reCopy(item);
               }}
             >
-              <span className="truncate">{generateSummary(item)}</span>
+              <div className="flex-grow truncate">{generateSummary(item)}</div>
+              <div className="flex items-center">{generateTags(item)}</div>
             </li>
           ))}
       </ul>
