@@ -19,6 +19,8 @@ interface ClipboardHistoryEntityDetail {
     byteLength?: number
     // For text
     wordCount?: number
+    // For image:
+    tags?: string[]
 }
 
 interface ListClipboardHistoryQuery {

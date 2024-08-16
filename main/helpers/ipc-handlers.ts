@@ -1,10 +1,9 @@
 import { BrowserWindow, Event } from "electron"
-import { cache } from "main/components/singletons"
+import { cache, settings } from "main/components/singletons"
 import { ClipboardHisotryEntity, ListClipboardHistoryQuery } from "main/db/schemes"
 import { writeClipboard } from "main/utils/clipboard"
 import { exec } from "child_process"
 import log from "electron-log/main"
-import { loadConfig, saveConfig } from "./settings"
 
 export const registerHandlers = (ipcMain) => {
     ipcMain.on('app:hide', () => {
@@ -32,6 +31,6 @@ export const registerHandlers = (ipcMain) => {
     // system
     ipcMain.on('system:openUrl', (event: Event, url: string) => { exec(`open ${url}`) })
     // ----------- settings ------------
-    ipcMain.handle('setting:loadConfig', () => loadConfig())
-    ipcMain.on('setting:saveConfig', (event: Event, configStr: string) => saveConfig(configStr))
+    ipcMain.handle('setting:loadConfig', () => settings.loadConfig())
+    ipcMain.on('setting:saveConfig', (event: Event, configStr: string) => settings.saveConfig(configStr))
 }
