@@ -22,6 +22,7 @@ const appSettingConfigSlice = createSlice({
             return action.payload;
         },
         updateAppSettingConfig: (state, action: PayloadAction<Partial<AppSettingConfig>>) => {
+            log.debug('updateConfig', action.payload);
             const newState = { ...state, ...action.payload };
             window.ipc.send('setting:saveConfig', JSON.stringify(newState));
             return newState;
