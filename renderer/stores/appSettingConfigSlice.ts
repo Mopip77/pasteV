@@ -5,7 +5,7 @@ import store from "./store";
 
 let initialState: AppSettingConfig = {
     aiTagEnable: false,
-    aiTagByImage: false,
+    imageInputType: 'text',
     openaiConfig: {
         apiHost: "",
         apiKey: "",
