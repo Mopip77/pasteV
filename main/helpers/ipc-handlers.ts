@@ -4,6 +4,7 @@ import { ClipboardHisotryEntity, ListClipboardHistoryQuery } from "main/db/schem
 import { writeClipboard } from "main/utils/clipboard"
 import { exec } from "child_process"
 import log from "electron-log/main"
+import { loadConfig, saveConfig } from "./settings"
 
 export const registerHandlers = (ipcMain) => {
     ipcMain.on('app:hide', () => {
@@ -30,4 +31,7 @@ export const registerHandlers = (ipcMain) => {
     })
     // system
     ipcMain.on('system:openUrl', (event: Event, url: string) => { exec(`open ${url}`) })
+    // ----------- settings ------------
+    ipcMain.handle('setting:loadConfig', () => loadConfig())
+    ipcMain.on('setting:saveConfig', (event: Event, configStr: string) => saveConfig(configStr))
 }
