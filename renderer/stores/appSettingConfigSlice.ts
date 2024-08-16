@@ -22,11 +22,8 @@ const appSettingConfigSlice = createSlice({
             return action.payload;
         },
         updateAppSettingConfig: (state, action: PayloadAction<Partial<AppSettingConfig>>) => {
-
             const newState = { ...state, ...action.payload };
-            log.info('updateConfig', action.payload, newState);
             window.ipc.send('setting:saveConfig', JSON.stringify(newState));
-
             return newState;
         },
     },
@@ -39,7 +36,6 @@ export const { setAppSettingConfig, updateAppSettingConfig } = appSettingConfigS
 async function fetchInitialState() {
     try {
         const config = await window.ipc.invoke('setting:loadConfig');
-        log.info('Fetched initial state:', config);
         if (config) {
             store.dispatch(setAppSettingConfig(config));
         }
