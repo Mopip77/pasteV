@@ -11,6 +11,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,15 +28,41 @@ const SettingsPage = () => {
   const dispatch = useDispatch();
   const router = useRouter();
 
-  const settingSechema = z.object({
-    aiTagEnable: z.boolean(),
-    imageInputType: z.string(),
-    openaiConfig: z.object({
-      apiHost: z.string(),
-      apiKey: z.string(),
-      model: z.string(),
-    }),
-  });
+  const settingSechema = z
+    .object({
+      aiTagEnable: z.boolean(),
+      imageInputType: z.string(),
+      openaiConfig: z.object({
+        apiHost: z.string(),
+        apiKey: z.string(),
+        model: z.string(),
+      }),
+    })
+    .superRefine((data, ctx) => {
+      if (data.aiTagEnable) {
+        if (!data.openaiConfig.apiHost) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "apiHost is required",
+            path: ["openaiConfig", "apiHost"],
+          });
+        }
+        if (!data.openaiConfig.apiKey) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "apiKey is required",
+            path: ["openaiConfig", "apiKey"],
+          });
+        }
+        if (!data.openaiConfig.model) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "model is required",
+            path: ["openaiConfig", "model"],
+          });
+        }
+      }
+    });
 
   const form = useForm<z.infer<typeof settingSechema>>({
     resolver: zodResolver(settingSechema),
@@ -154,6 +181,7 @@ const SettingsPage = () => {
                 <FormItem className="p-2">
                   <FormLabel>OpenAI Model</FormLabel>
                   <Input {...field} />
+                  <FormMessage />
                 </FormItem>
               )}
             />
