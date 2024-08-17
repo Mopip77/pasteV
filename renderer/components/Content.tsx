@@ -211,25 +211,34 @@ const Content = () => {
     setHighlightInfo(undefined);
   };
 
-  const handleUlScroll = (event: React.UIEvent<HTMLUListElement>) => {
-    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
-    if (
-      scrollTop + clientHeight >= scrollHeight - 10 &&
-      !loadingHistory &&
-      !noMoreHistory
-    ) {
-      log.debug("fetch more history");
-      fetchHistory({
-        keyword: searchBody.keyword,
-        offset: histories.length,
-        size: batchSize,
-        regex: searchBody.regex,
-        type: searchBody.type,
-      }).then((moreHistories: ClipboardHisotryEntity[]) => {
-        setHistories((prevHistories) => [...prevHistories, ...moreHistories]);
-      });
-    }
-  };
+  const handleUlScroll = useCallback(
+    throttle(async (event: React.UIEvent<HTMLUListElement>) => {
+      const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+      log.debug(
+        "scrollTop, scrollHeight, clientHeight",
+        scrollTop,
+        scrollHeight,
+        clientHeight
+      );
+      if (
+        scrollTop + clientHeight >= scrollHeight - 10 &&
+        !loadingHistory &&
+        !noMoreHistory
+      ) {
+        log.debug("fetch more history");
+        fetchHistory({
+          keyword: searchBody.keyword,
+          offset: histories.length,
+          size: batchSize,
+          regex: searchBody.regex,
+          type: searchBody.type,
+        }).then((moreHistories: ClipboardHisotryEntity[]) => {
+          setHistories((prevHistories) => [...prevHistories, ...moreHistories]);
+        });
+      }
+    }, 100),
+    [loadingHistory, noMoreHistory]
+  );
 
   const reCopy = async (item: ClipboardHisotryEntity) => {
     window.ipc.send("app:hide", "");
@@ -253,10 +262,13 @@ const Content = () => {
     }
     return item.text;
   };
-  
+
   const generateTags = (item: ClipboardHisotryEntity) => {
     return JSON.parse(item.details).tags?.map((tag, index) => (
-      <span key={index} className="text-xs bg-gray-200 rounded-sm px-2 py-1 mx-1 w-10 overflow-x-hidden whitespace-nowrap">
+      <span
+        key={index}
+        className="text-xs bg-gray-200 rounded-sm px-2 py-1 mx-1 w-10 overflow-x-hidden whitespace-nowrap"
+      >
         {tag}
       </span>
     ));
@@ -524,7 +536,7 @@ const Content = () => {
       <div className="w-3/5 divide-y divide-gray-200">
         <div className="w-full h-2/3">
           <div className="h-full w-full overflow-x-auto break-words overflow-y-hidden hover:overflow-y-auto py-2 px-2 scrollbar-thin scrollbar-gutter-stable scrollbar-track-transparent scrollbar-thumb-slate-400 scrollbar-thumb-round-full bg-transparent">
-            {contentFC ? contentFC : 'Loading...'}
+            {contentFC ? contentFC : "Loading..."}
           </div>
           <div className="relative bottom-12">
             <div className="flex flex-row-reverse bg-transparent z-20 justify-start items-center py-1 pr-1 gap-2">
