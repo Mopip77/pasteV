@@ -20,6 +20,9 @@ import { z } from "zod";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { useRouter } from "next/router";
+import { Toaster } from "./ui/toaster";
+import { toast } from "./ui/use-toast";
+import { cn } from "@/lib/utils";
 
 const SettingsPage = () => {
   let appSettingConfig = useSelector(
@@ -76,6 +79,13 @@ const SettingsPage = () => {
   const onSubmit = (data: any) => {
     log.info("onSubmit", data);
     dispatch(updateAppSettingConfig(data));
+    toast({
+      title: "保存成功",
+      duration: 1000,
+      className: cn(
+        "top-0 right-0 flex fixed md:max-w-[420px] md:top-4 md:right-4"
+      ),
+    });
   };
 
   const onCancel = () => {
@@ -196,6 +206,7 @@ const SettingsPage = () => {
           </div>
         </div>
       </form>
+      <Toaster />
     </Form>
   );
 };
