@@ -507,7 +507,7 @@ const Content = () => {
                   itemCount={histories.length}
                   onItemsRendered={onItemsRendered}
                   ref={ref}
-                  className={`!overflow-hidden hover:!overflow-y-auto scrollbar-thin scrollbar-gutter-stable scrollbar-track-transparent scrollbar-thumb-slate-400 scrollbar-thumb-round-full ${hidePointer ? "cursor-none" : ""} `}
+                  className="scrollbar-none"
                 >
                   {({ index, style }) => (
                     <li
@@ -515,7 +515,7 @@ const Content = () => {
                       ref={(el) => {
                         listRefs.current[index] = el;
                       }}
-                      className={`h-10 my-1 mx-1 px-2 flex items-center rounded-lg ${
+                      className={`flex items-center px-2 rounded-lg ${
                         index === mouseUpIndex ? "bg-blue-200" : ""
                       } ${index === selectedIndex ? "bg-blue-400" : ""}`}
                       onMouseOver={() => {
