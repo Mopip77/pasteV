@@ -1,3 +1,4 @@
+import log from "electron-log/main";
 import { settings } from "main/components/singletons";
 import OpenAI from "openai";
 
@@ -25,6 +26,8 @@ export async function chatComplection(prompt: string): Promise<string> {
         ],
     });
 
+    log.info(`[ai] chat model=${response.model}, usage=${response.usage}`);
+
     return new Promise((resolve, reject) => {
         resolve(response.choices[0].message.content);
     });
@@ -44,6 +47,8 @@ export async function chatComplectionJsonFormatted(prompt: string): Promise<stri
             type: "json_object"
         }
     });
+
+    log.info(`[ai] chat model=${response.model}, usage=${response.usage}`);
 
     return new Promise((resolve, reject) => {
         resolve(response.choices[0].message.content);
@@ -73,6 +78,8 @@ export async function chatComplectionWithImage(prompt: string, image: Buffer): P
             },
         ],
     });
+
+    log.info(`[ai] chat model=${response.model}, usage=${response.usage}`);
 
     return new Promise((resolve, reject) => {
         resolve(response.choices[0].message.content);
@@ -105,6 +112,8 @@ export async function chatComplectionWithImageJsonFormatted(prompt: string, imag
             type: "json_object"
         }
     });
+
+    log.info(`[ai] chat model=${response.model}, usage=${response.usage}`);
 
     return new Promise((resolve, reject) => {
         resolve(response.choices[0].message.content);

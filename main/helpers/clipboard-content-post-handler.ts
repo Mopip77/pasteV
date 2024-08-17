@@ -2,35 +2,36 @@ import { ClipboardHisotryEntity } from "main/db/schemes";
 import { ocr } from "./ocr";
 import { db, settings } from "main/components/singletons";
 import log from "electron-log/main";
-import { readPngMetadata } from "./image-utils";
-import { chatComplectionJsonFormatted } from "main/utils/ai";
+import { compressionPicture, readPngMetadata } from "../utils/image";
+import { chatComplectionJsonFormatted, chatComplectionWithImageJsonFormatted } from "main/utils/ai";
+import { PNG } from "pngjs";
+import { app } from "electron";
+import { writeFileSync } from "original-fs";
 
 export async function postHandleClipboardContent(item: ClipboardHisotryEntity) {
     if (item.type === 'image') {
-        log.info("[post-handler] Start ocr for image");
-        ocr(item.blob)
-            .then(ocrResult => {
-                log.info("[post-handler] Ocr result=", ocrResult)
-                item.text = ocrResult
-                db.updateClipboardHistoryText(item.hashKey, ocrResult)
-                return ocrResult
-            })
-            .then(ocrResult => aiTag(item, ocrResult))
-            .catch(err => {
-                log.error("[post-handler] Ocr error=", err)
-            })
+        log.info(`[post-handler] {${item.hashKey}} Start to handle image`);
         readPngMetadata(item.blob)
-            .then(metadata => {
+            .then(img => {
+                log.info(`[post-handler] {${item.hashKey}} Image metadata: width=${img.width}, height=${img.height}, byteLength=${Buffer.byteLength(item.blob)}`);
                 item.details = JSON.stringify({
                     ...JSON.parse(item.details),
-                    width: metadata.width,
-                    height: metadata.height,
+                    width: img.width,
+                    height: img.height,
                     byteLength: Buffer.byteLength(item.blob)
                 })
                 db.updateClipboardHistoryDetails(item.hashKey, item.details)
+                return img
             })
+            .then(img => ocr(item.blob).then(ocrResult => {
+                log.info(`[post-handler] {${item.hashKey}} Ocr result=${ocrResult}`);
+                item.text = ocrResult
+                db.updateClipboardHistoryText(item.hashKey, ocrResult)
+                return { ocrResult, img }
+            }))
+            .then(({ ocrResult, img }) => aiTag(item, img, ocrResult))
             .catch(err => {
-                log.error("[post-handler] Metadata error=", err)
+                log.error(`[post-handler] {${item.hashKey}} Error=${err}`);
             })
     }
 
@@ -43,7 +44,7 @@ export async function postHandleClipboardContent(item: ClipboardHisotryEntity) {
 }
 
 // ai 打标签
-async function aiTag(item: ClipboardHisotryEntity, ocrResult: string) {
+async function aiTag(item: ClipboardHisotryEntity, img: PNG, ocrResult: string) {
     const config = settings.loadConfig();
     if (!config?.aiTagEnable || !config?.openaiConfig) {
         return;
@@ -52,8 +53,33 @@ async function aiTag(item: ClipboardHisotryEntity, ocrResult: string) {
     let aiResponse
     if (config.imageInputType === 'image') {
         // 压缩图片
-        // chatComplectionWithImage(ocrResult, item.blob)
-        log.info("[post-handler] aiTag, 还不支持图片识别")
+        log.info(`[post-handler] {${item.hashKey}} aiTag, start compressionPicture, size=${item.blob.length}`)
+        aiResponse = await compressionPicture({
+            content: item.blob,
+            originWidth: img.width,
+            originHeight: img.height,
+            maxWidth: 1000,
+            maxHeight: 1000
+        }).then(compressedBuffer => {
+            log.info("[post-handler] aiTag, compressedBuffer size=", compressedBuffer.length)
+
+            const ocrPrompt = `
+            ## 目标
+            请用最多三个词来描述这张图片，这些词应该是有关这张图片的主题的。
+        
+            ## 要求
+            - 以 json 格式输出一个字符串数组
+            - 最多输出三个词
+            - 三个词尽量不相关
+            - 如果输入内容过少，可以输出空数组
+        
+            ## 例子
+            1. {"tags": ["对话", "天气", "风景"]}
+            2. {"tags": []}
+            `
+
+            return chatComplectionWithImageJsonFormatted(ocrPrompt, compressedBuffer)
+        })
     } else {
         const ocrPrompt = `
     ## 背景
@@ -76,6 +102,11 @@ async function aiTag(item: ClipboardHisotryEntity, ocrResult: string) {
     ${ocrResult}
     `
         aiResponse = await chatComplectionJsonFormatted(ocrPrompt);
+    }
+
+    if (!aiResponse) {
+        log.debug(`[post-handler] {${item.hashKey}} aiTag, aiResponse is empty`)
+        return;
     }
 
     const aiResponseJson = JSON.parse(aiResponse);
