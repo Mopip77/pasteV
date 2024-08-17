@@ -59,7 +59,7 @@ const SettingsPage = () => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-8 mx-4 my-4 h-[75vh] overflow-y-scroll"
+        className="w-full mx-auto flex flex-col space-y-4 my-4 h-[75vh] max-w-3xl overflow-y-scroll scrollbar-none"
       >
         <h3 className="text-2xl font-bold">应用设置</h3>
         <FormField
@@ -159,7 +159,7 @@ const SettingsPage = () => {
             />
           </>
         )}
-        <div className="w-full fixed bottom-20 h-4">
+        <div className="w-full max-w-3xl fixed bottom-20 h-4">
           <div className="w-full flex justify-around">
             <Button variant="secondary" onClick={onCancel}>
               Cancel
