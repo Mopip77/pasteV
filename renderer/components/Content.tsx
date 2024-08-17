@@ -186,7 +186,7 @@ const Content = () => {
     setContentFC(null);
     const content = showContent();
     setContentFC(content);
-  }, [selectedIndex]);
+  }, [selectedIndex, showHighlight, showOcrResult]);
 
   // async generate highlight info
   useEffect(() => {
