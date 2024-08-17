@@ -27,6 +27,9 @@ import { Button } from "./ui/button";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 import { SearchBodyContext } from "./ClipboardHistory";
 import { debounce, throttle } from "@/lib/utils";
+import AutoSizer from "react-virtualized-auto-sizer";
+import { FixedSizeList } from "react-window";
+import InfiniteLoader from "react-window-infinite-loader";
 
 interface HighlightResult {
   error?: Error;
@@ -155,13 +158,13 @@ const Content = () => {
   }, [selectedIndex, histories]);
 
   // scroll to selected index
-  useEffect(() => {
-    if (selectedIndex >= 0) {
-      listRefs.current[selectedIndex]?.scrollIntoView({
-        block: "nearest",
-      });
-    }
-  }, [selectedIndex]);
+  // useEffect(() => {
+  //   if (selectedIndex >= 0) {
+  //     listRefs.current[selectedIndex]?.scrollIntoView({
+  //       block: "nearest",
+  //     });
+  //   }
+  // }, [selectedIndex]);
 
   const debouncedHighlightFunc = useCallback(
     debounce(async (item: ClipboardHisotryEntity) => {
@@ -211,34 +214,24 @@ const Content = () => {
     setHighlightInfo(undefined);
   };
 
-  const handleUlScroll = useCallback(
-    throttle(async (event: React.UIEvent<HTMLUListElement>) => {
-      const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
-      log.debug(
-        "scrollTop, scrollHeight, clientHeight",
-        scrollTop,
-        scrollHeight,
-        clientHeight
-      );
-      if (
-        scrollTop + clientHeight >= scrollHeight - 10 &&
-        !loadingHistory &&
-        !noMoreHistory
-      ) {
-        log.debug("fetch more history");
-        fetchHistory({
-          keyword: searchBody.keyword,
-          offset: histories.length,
-          size: batchSize,
-          regex: searchBody.regex,
-          type: searchBody.type,
-        }).then((moreHistories: ClipboardHisotryEntity[]) => {
-          setHistories((prevHistories) => [...prevHistories, ...moreHistories]);
-        });
-      }
-    }, 100),
-    [loadingHistory, noMoreHistory]
-  );
+  const loadMoreItems = async (startIndex: number, stopIndex: number) => {
+    log.debug(
+      "loadMoreItems, startIndex=",
+      startIndex,
+      "stopIndex=",
+      stopIndex
+    );
+    if (stopIndex >= histories.length - 1) {
+      const moreHistories = await fetchHistory({
+        keyword: searchBody.keyword,
+        offset: histories.length,
+        size: batchSize,
+        regex: searchBody.regex,
+        type: searchBody.type,
+      });
+      setHistories((prevHistories) => [...prevHistories, ...moreHistories]);
+    }
+  };
 
   const reCopy = async (item: ClipboardHisotryEntity) => {
     window.ipc.send("app:hide", "");
@@ -499,40 +492,63 @@ const Content = () => {
 
   return (
     <div className="flex h-full divide-x divide-gray-200">
-      <ul
-        className={`w-2/5 overflow-hidden hover:overflow-y-auto scrollbar-thin scrollbar-gutter-stable scrollbar-track-transparent scrollbar-thumb-slate-400 scrollbar-thumb-round-full
-          ${hidePointer ? "cursor-none" : ""}
-          `}
-        onScroll={handleUlScroll}
-      >
-        {histories.length > 0 &&
-          histories.map((item, index) => (
-            <li
-              key={index}
-              ref={(el) => {
-                listRefs.current[index] = el;
-              }}
-              className={`h-10 my-1 mx-1 px-2 flex items-center rounded-lg ${
-                index === mouseUpIndex ? "bg-blue-200" : ""
-              } ${index === selectedIndex ? "bg-blue-400" : ""}`}
-              onMouseOver={() => {
-                hidePointer || setMouseIndex(index);
-              }}
-              onMouseOut={() => {
-                setMouseIndex(-1);
-              }}
-              onClick={() => {
-                handleSelectionChange(index);
-              }}
-              onDoubleClick={() => {
-                reCopy(item);
-              }}
+      <div className="w-2/5">
+        <AutoSizer>
+          {({ width, height }) => (
+            <InfiniteLoader
+              isItemLoaded={(index) =>
+                noMoreHistory || index < histories.length - 1
+              }
+              itemCount={histories.length}
+              loadMoreItems={loadMoreItems}
             >
-              <div className="flex-grow truncate">{generateSummary(item)}</div>
-              <div className="flex items-center">{generateTags(item)}</div>
-            </li>
-          ))}
-      </ul>
+              {({ onItemsRendered, ref }) => (
+                <FixedSizeList
+                  width={width}
+                  height={height}
+                  itemSize={40}
+                  itemCount={histories.length}
+                  onItemsRendered={onItemsRendered}
+                  ref={ref}
+                  className={`!overflow-hidden hover:!overflow-y-auto scrollbar-thin scrollbar-gutter-stable scrollbar-track-transparent scrollbar-thumb-slate-400 scrollbar-thumb-round-full ${hidePointer ? "cursor-none" : ""} `}
+                >
+                  {({ index, style }) => (
+                    <li
+                      key={index}
+                      ref={(el) => {
+                        listRefs.current[index] = el;
+                      }}
+                      className={`h-10 my-1 mx-1 px-2 flex items-center rounded-lg ${
+                        index === mouseUpIndex ? "bg-blue-200" : ""
+                      } ${index === selectedIndex ? "bg-blue-400" : ""}`}
+                      onMouseOver={() => {
+                        hidePointer || setMouseIndex(index);
+                      }}
+                      onMouseOut={() => {
+                        setMouseIndex(-1);
+                      }}
+                      onClick={() => {
+                        handleSelectionChange(index);
+                      }}
+                      onDoubleClick={() => {
+                        reCopy(histories[index]);
+                      }}
+                      style={style}
+                    >
+                      <div className="flex-grow truncate">
+                        {generateSummary(histories[index])}
+                      </div>
+                      <div className="flex items-center">
+                        {generateTags(histories[index])}
+                      </div>
+                    </li>
+                  )}
+                </FixedSizeList>
+              )}
+            </InfiniteLoader>
+          )}
+        </AutoSizer>
+      </div>
       <div className="w-3/5 divide-y divide-gray-200">
         <div className="w-full h-2/3">
           <div className="h-full w-full overflow-x-auto break-words overflow-y-hidden hover:overflow-y-auto py-2 px-2 scrollbar-thin scrollbar-gutter-stable scrollbar-track-transparent scrollbar-thumb-slate-400 scrollbar-thumb-round-full bg-transparent">
