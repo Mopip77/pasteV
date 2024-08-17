@@ -44,7 +44,6 @@ const Content = () => {
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [mouseUpIndex, setMouseIndex] = useState<number>(-1);
   const [hidePointer, setHidePointer] = useState<boolean>(false);
-  const [loadingHistory, setLoadingHistory] = useState<boolean>(false);
   const [noMoreHistory, setNoMoreHistory] = useState<boolean>(false);
   const [highlightInfo, setHighlightInfo] =
     useState<HighlightResult>(undefined);
@@ -77,7 +76,6 @@ const Content = () => {
       "type=",
       type
     );
-    setLoadingHistory(true);
     const result = await global.window.ipc.invoke("clipboard:query", {
       keyword,
       regex,
@@ -90,7 +88,6 @@ const Content = () => {
       setNoMoreHistory(true);
     }
 
-    setLoadingHistory(false);
     return result;
   };
 
@@ -158,13 +155,13 @@ const Content = () => {
   }, [selectedIndex, histories]);
 
   // scroll to selected index
-  // useEffect(() => {
-  //   if (selectedIndex >= 0) {
-  //     listRefs.current[selectedIndex]?.scrollIntoView({
-  //       block: "nearest",
-  //     });
-  //   }
-  // }, [selectedIndex]);
+  useEffect(() => {
+    if (selectedIndex >= 0) {
+      listRefs.current[selectedIndex]?.scrollIntoView({
+        block: "nearest",
+      });
+    }
+  }, [selectedIndex]);
 
   const debouncedHighlightFunc = useCallback(
     debounce(async (item: ClipboardHisotryEntity) => {
