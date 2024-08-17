@@ -268,7 +268,7 @@ const Content = () => {
             contentStyle={{ width: "100%", height: "100%" }}
           >
             <img
-              className="object-contain object-left-top"
+              className="w-full h-full object-contain object-left-top"
               src={`data:image/png;base64,${base64String}`}
               alt="Detail"
             />
