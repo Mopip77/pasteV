@@ -48,6 +48,7 @@ const Content = () => {
   const highlightGereratorAbortController = useRef<AbortController | null>(
     null
   );
+  const [contentFC, setContentFC] = useState(null);
   const [showHighlight, setShowHighlight] = useState<boolean>(false);
   const [showOcrResult, setShowOcrResult] = useState<boolean>(false);
   const listRefs = useRef<(HTMLLIElement | null)[]>([]);
@@ -180,6 +181,13 @@ const Content = () => {
     []
   );
 
+  // async generate content
+  useEffect(() => {
+    setContentFC(null);
+    const content = showContent();
+    setContentFC(content);
+  }, [selectedIndex]);
+
   // async generate highlight info
   useEffect(() => {
     log.debug("async generate highlight info", selectedIndex);
@@ -271,6 +279,7 @@ const Content = () => {
               className="w-full h-full object-contain object-left-top"
               src={`data:image/png;base64,${base64String}`}
               alt="Detail"
+              loading="lazy"
             />
           </TransformComponent>
         </TransformWrapper>
@@ -348,7 +357,7 @@ const Content = () => {
     return details;
   };
 
-  const showContent = useMemo(() => {
+  const showContent = useCallback(() => {
     log.log("re render showContent", selectedIndex, showHighlight);
     if (selectedIndex >= 0) {
       if (showHighlight) {
@@ -487,7 +496,7 @@ const Content = () => {
         {histories.length > 0 &&
           histories.map((item, index) => (
             <li
-              key={item.hashKey}
+              key={index}
               ref={(el) => {
                 listRefs.current[index] = el;
               }}
@@ -515,7 +524,7 @@ const Content = () => {
       <div className="w-3/5 divide-y divide-gray-200">
         <div className="w-full h-2/3">
           <div className="h-full w-full overflow-x-auto break-words overflow-y-hidden hover:overflow-y-auto py-2 px-2 scrollbar-thin scrollbar-gutter-stable scrollbar-track-transparent scrollbar-thumb-slate-400 scrollbar-thumb-round-full bg-transparent">
-            {showContent}
+            {contentFC ? contentFC : 'Loading...'}
           </div>
           <div className="relative bottom-12">
             <div className="flex flex-row-reverse bg-transparent z-20 justify-start items-center py-1 pr-1 gap-2">
