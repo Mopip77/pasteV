@@ -13,4 +13,7 @@ extraResources:
   - from: .
     filter:
       - build
+asarUnpack:
+  - "**/node_modules/sharp/**/*"
+  - "**/node_modules/@img/**/*"
 publish: null
