@@ -255,12 +255,21 @@ const Content = () => {
 
   const generateTags = (item: ClipboardHisotryEntity) => {
     return JSON.parse(item.details).tags?.map((tag, index) => (
-      <span
-        key={index}
-        className="text-xs bg-gray-200 rounded-sm px-2 py-1 mx-1 w-10 overflow-x-hidden whitespace-nowrap"
-      >
-        {tag}
-      </span>
+      <TooltipProvider>
+        <Tooltip delayDuration={100}>
+          <TooltipTrigger asChild>
+            <span
+              key={index}
+              className="text-xs bg-gray-200 rounded-sm px-2 py-1 mx-1 w-10 overflow-x-hidden whitespace-nowrap"
+            >
+              {tag.substring(0, 2)}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{tag}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     ));
   };
 
