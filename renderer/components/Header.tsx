@@ -66,6 +66,15 @@ const Header = () => {
           if (e.key === "ArrowUp" || e.key === "ArrowDown") {
             e.preventDefault();
           }
+          if (e.key === "Escape") {
+            if (searchBody.keyword.length > 0) {
+              setSearchBody((prev) => ({
+                ...prev,
+                keyword: "",
+              }));
+              e.stopPropagation();
+            }
+          }
         }}
       />
       <div className="flex gap-1">
