@@ -33,6 +33,7 @@ const SettingsPage = () => {
 
   const settingSechema = z
     .object({
+      appWindowToggleShortcut: z.string().min(1, { message: "不能为空" }),
       aiTagEnable: z.boolean(),
       imageInputType: z.string(),
       openaiConfig: z.object({
@@ -70,6 +71,7 @@ const SettingsPage = () => {
   const form = useForm<z.infer<typeof settingSechema>>({
     resolver: zodResolver(settingSechema),
     defaultValues: {
+      appWindowToggleShortcut: appSettingConfig.appWindowToggleShortcut,
       aiTagEnable: appSettingConfig.aiTagEnable,
       imageInputType: appSettingConfig.imageInputType,
       openaiConfig: appSettingConfig.openaiConfig,
@@ -99,6 +101,18 @@ const SettingsPage = () => {
         className="w-full mx-auto flex flex-col space-y-4 my-4 h-[75vh] max-w-3xl overflow-y-scroll scrollbar-none"
       >
         <h3 className="text-2xl font-bold">应用设置</h3>
+        <FormField
+          control={form.control}
+          name="appWindowToggleShortcut"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">展示/隐藏窗口快捷键</FormLabel>
+              </div>
+              <Input className="w-1/2" {...field} />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="aiTagEnable"

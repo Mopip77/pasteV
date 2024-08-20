@@ -4,6 +4,7 @@ import { ClipboardHisotryEntity, ListClipboardHistoryQuery } from "main/db/schem
 import { writeClipboard } from "main/utils/clipboard"
 import { exec } from "child_process"
 import log from "electron-log/main"
+import { registerAppWindowToggleShortcut } from "main/background"
 
 export const registerHandlers = (ipcMain) => {
     ipcMain.on('app:hide', () => {
@@ -32,5 +33,9 @@ export const registerHandlers = (ipcMain) => {
     ipcMain.on('system:openUrl', (event: Event, url: string) => { exec(`open ${url}`) })
     // ----------- settings ------------
     ipcMain.handle('setting:loadConfig', () => settings.loadConfig())
-    ipcMain.on('setting:saveConfig', (event: Event, configStr: string) => settings.saveConfig(configStr))
+    ipcMain.on('setting:saveConfig', (event: Event, configStr: string) => {
+        settings.saveConfig(configStr);
+        // 更新快捷键
+        registerAppWindowToggleShortcut();
+    })
 }

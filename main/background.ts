@@ -22,6 +22,10 @@ log.transports.ipc.level = false;
 
 log.info("background process started");
 
+// refs
+let mainWindow: Electron.BrowserWindow;
+let appWindowToggleShortcut = '';
+
 (async () => {
   initSingletons();
   startReadingClipboardDaemon();
@@ -29,7 +33,7 @@ log.info("background process started");
 
   await app.whenReady();
 
-  const mainWindow = createWindow("main", {
+  mainWindow = createWindow("main", {
     width: 1000,
     height: 600,
     center: true,
@@ -61,18 +65,33 @@ log.info("background process started");
     }
   });
 
-  globalShortcut.register(settings.loadConfig().appWindowToggleShortcut, () => {
-    if (mainWindow.isVisible()) {
-      mainWindow.hide();
-    } else {
-      mainWindow.setVisibleOnAllWorkspaces(true);
-      mainWindow.show();
-      mainWindow.focus();
-      mainWindow.webContents.send("app:show");
-    }
-  });
+  registerAppWindowToggleShortcut();
 })();
 
 app.on("before-quit", () => {
   appQuit = true;
 });
+
+export const registerAppWindowToggleShortcut = () => {
+  const newShorcut = settings.loadConfig().appWindowToggleShortcut;
+  log.info(`registerAppWindowToggleShortcut, old=${appWindowToggleShortcut}, new=${newShorcut}`);
+  if (appWindowToggleShortcut !== newShorcut) {
+    if (appWindowToggleShortcut) {
+      globalShortcut.unregister(appWindowToggleShortcut);
+    }
+
+    globalShortcut.register(newShorcut, () => {
+      if (mainWindow.isVisible()) {
+        mainWindow.hide();
+      } else {
+        mainWindow.setVisibleOnAllWorkspaces(true);
+        mainWindow.show();
+        mainWindow.focus();
+        mainWindow.webContents.send("app:show");
+      }
+    }
+    );
+
+    appWindowToggleShortcut = newShorcut;
+  }
+}
