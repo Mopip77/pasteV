@@ -1,6 +1,6 @@
 import { generateHashKey, readClipboard } from "../utils/clipboard"
-import { cache } from '../components/singletons'
 import { ClipboardHisotryEntity } from "../db/schemes";
+import { singletons } from "main/components/singletons";
 
 export const startReadingClipboardDaemon = () => {
     setInterval(() => {
@@ -32,6 +32,6 @@ export const startReadingClipboardDaemon = () => {
             details: '{}'
         }
 
-        cache.add(entity)
+        singletons.cache.add(entity)
     }, 1000)
 }

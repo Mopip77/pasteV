@@ -1,20 +1,28 @@
 import { BrowserWindow, Event } from "electron"
-import { cache, settings } from "main/components/singletons"
 import { ClipboardHisotryEntity, ListClipboardHistoryQuery } from "main/db/schemes"
 import { writeClipboard } from "main/utils/clipboard"
 import { exec } from "child_process"
 import log from "electron-log/main"
-import { registerAppWindowToggleShortcut } from "main/background"
+import { singletons } from "main/components/singletons"
+import { ShortcutKey } from "main/utils/consts"
 
 export const registerHandlers = (ipcMain) => {
+    // app
     ipcMain.on('app:hide', () => {
         const mainWindow = BrowserWindow.getFocusedWindow();
         if (mainWindow) {
             mainWindow.hide();
         }
     })
+    ipcMain.on('app:toggleGlobalShortcuts', (event: Event, enable: boolean) => {
+        if (enable) {
+            singletons.shortcuts.enableAllGlobalShortcuts();
+        } else {
+            singletons.shortcuts.disableAllGlobalShortcuts();
+        }
+    })
     // clipboard query
-    ipcMain.handle('clipboard:query', (event: Event, query: ListClipboardHistoryQuery) => cache.query(query))
+    ipcMain.handle('clipboard:query', (event: Event, query: ListClipboardHistoryQuery) => singletons.cache.query(query))
     // clipboard insert
     ipcMain.handle('clipboard:add', (event: Event, entity: ClipboardHisotryEntity, paste: boolean) => {
         writeClipboard({ type: entity.type, text: entity.text, blob: entity.blob })
@@ -32,10 +40,13 @@ export const registerHandlers = (ipcMain) => {
     // system
     ipcMain.on('system:openUrl', (event: Event, url: string) => { exec(`open ${url}`) })
     // ----------- settings ------------
-    ipcMain.handle('setting:loadConfig', () => settings.loadConfig())
+    ipcMain.handle('setting:loadConfig', () => singletons.settings.loadConfig())
     ipcMain.on('setting:saveConfig', (event: Event, configStr: string) => {
-        settings.saveConfig(configStr);
+        singletons.settings.saveConfig(configStr);
         // 更新快捷键
-        registerAppWindowToggleShortcut();
+        singletons.shortcuts.replaceGlobalShortcut(
+            ShortcutKey.APP_WINDOW_TOGGLE_SHORTCUT,
+            singletons.settings.loadConfig().appWindowToggleShortcut
+        );
     })
 }

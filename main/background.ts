@@ -1,12 +1,13 @@
 import path from "path";
-import { app, ipcMain, globalShortcut } from "electron";
+import { app, ipcMain } from "electron";
 import serve from "electron-serve";
 import { startReadingClipboardDaemon } from "./helpers/read-clipboard-daemon";
-import { initSingletons, settings } from "./components/singletons";
 import createWindow from "./helpers/create-window";
 import { registerHandlers } from "./helpers/ipc-handlers";
 import log from "electron-log/main";
 import { APP_WINDOW_TOGGLE_SHORTCUT } from "@/lib/consts";
+import { singletons } from "./components/singletons";
+import { ShortcutKey } from "./utils/consts";
 
 const isProd = process.env.NODE_ENV === "production";
 let appQuit = false;
@@ -25,10 +26,9 @@ log.info("background process started");
 
 // refs
 let mainWindow: Electron.BrowserWindow;
-let appWindowToggleShortcut = '';
 
 (async () => {
-  initSingletons();
+  singletons.initSingletons();
   startReadingClipboardDaemon();
   registerHandlers(ipcMain);
 
@@ -66,21 +66,11 @@ let appWindowToggleShortcut = '';
     }
   });
 
-  registerAppWindowToggleShortcut();
-})();
-
-app.on("before-quit", () => {
-  appQuit = true;
-});
-
-export const registerAppWindowToggleShortcut = () => {
-  const newShorcut = settings.loadConfig().appWindowToggleShortcut || APP_WINDOW_TOGGLE_SHORTCUT;
-  if (appWindowToggleShortcut !== newShorcut) {
-    if (appWindowToggleShortcut) {
-      globalShortcut.unregister(appWindowToggleShortcut);
-    }
-
-    globalShortcut.register(newShorcut, () => {
+  // Register global shortcuts
+  singletons.shortcuts.registerGlobalShortcut(
+    ShortcutKey.APP_WINDOW_TOGGLE_SHORTCUT,
+    singletons.settings.loadConfig().appWindowToggleShortcut || APP_WINDOW_TOGGLE_SHORTCUT,
+    () => {
       if (mainWindow.isVisible()) {
         mainWindow.hide();
       } else {
@@ -90,8 +80,9 @@ export const registerAppWindowToggleShortcut = () => {
         mainWindow.webContents.send("app:show");
       }
     }
-    );
+  )
+})();
 
-    appWindowToggleShortcut = newShorcut;
-  }
-}
+app.on("before-quit", () => {
+  appQuit = true;
+});

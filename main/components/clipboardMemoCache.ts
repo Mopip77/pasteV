@@ -1,8 +1,8 @@
 import log from "electron-log/main";
 import { ClipboardHisotryEntity, ListClipboardHistoryQuery } from "../db/schemes";
-import { db } from "./singletons";
 import { LinkedDictionary } from 'typescript-collections';
 import { postHandleClipboardContent } from "main/helpers/clipboard-content-post-handler";
+import { singletons } from "./singletons";
 
 class ClipboardMemoCache {
 
@@ -15,7 +15,7 @@ class ClipboardMemoCache {
     public init() {
         this.caches = new LinkedDictionary<string, ClipboardHisotryEntity>();
 
-        const historiesFromDb = db.listClipboardHistory({ size: 100 });
+        const historiesFromDb = singletons.db.listClipboardHistory({ size: 100 });
         historiesFromDb.reverse().forEach(history => {
             this.caches.setValue(history.hashKey, history)
         })
@@ -33,9 +33,9 @@ class ClipboardMemoCache {
                 return
             }
             this.caches.remove(data.hashKey)
-            db.updateClipboardHistoryLastReadTime(data.hashKey, data.lastReadTime)
+            singletons.db.updateClipboardHistoryLastReadTime(data.hashKey, data.lastReadTime)
         } else {
-            db.insertClipboardHistory(data)
+            singletons.db.insertClipboardHistory(data)
             postHandleClipboardContent(data)
         }
         this.caches.setValue(data.hashKey, data)
@@ -44,7 +44,7 @@ class ClipboardMemoCache {
 
     public query(queryBody: ListClipboardHistoryQuery): ClipboardHisotryEntity[] {
         log.debug("query history, body=", queryBody)
-        return db.listClipboardHistory(queryBody)
+        return singletons.db.listClipboardHistory(queryBody)
     }
 }
 

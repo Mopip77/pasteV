@@ -1,5 +1,5 @@
 import log from "electron-log/main";
-import { settings } from "main/components/singletons";
+import { singletons } from "main/components/singletons";
 import OpenAI from "openai";
 
 function generateClient(): OpenAI | undefined {
@@ -17,7 +17,7 @@ function generateClient(): OpenAI | undefined {
 export async function chatComplection(prompt: string): Promise<string> {
     const client = generateClient();
     const response = await client.chat.completions.create({
-        model: settings.loadConfig().openaiConfig.model,
+        model: singletons.settings.loadConfig().openaiConfig.model,
         messages: [
             {
                 role: "user",
@@ -36,7 +36,7 @@ export async function chatComplection(prompt: string): Promise<string> {
 export async function chatComplectionJsonFormatted(prompt: string): Promise<string> {
     const client = generateClient();
     const response = await client.chat.completions.create({
-        model: settings.loadConfig().openaiConfig.model,
+        model: singletons.settings.loadConfig().openaiConfig.model,
         messages: [
             {
                 role: "user",
@@ -59,7 +59,7 @@ export async function chatComplectionWithImage(prompt: string, image: Buffer): P
     const client = generateClient();
 
     const response = await client.chat.completions.create({
-        model: settings.loadConfig().openaiConfig.model,
+        model: singletons.settings.loadConfig().openaiConfig.model,
         messages: [
             {
                 role: "user",
@@ -90,7 +90,7 @@ export async function chatComplectionWithImageJsonFormatted(prompt: string, imag
     const client = generateClient();
 
     const response = await client.chat.completions.create({
-        model: settings.loadConfig().openaiConfig.model,
+        model: singletons.settings.loadConfig().openaiConfig.model,
         messages: [
             {
                 role: "user",

@@ -1,4 +1,4 @@
-import React, { KeyboardEvent } from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/stores/store";
 import { updateAppSettingConfig } from "@/stores/appSettingConfigSlice";
@@ -22,8 +22,8 @@ import { useRouter } from "next/router";
 import { Toaster } from "./ui/toaster";
 import { toast } from "./ui/use-toast";
 import { cn } from "@/lib/utils";
-import { Check, Disc2 } from "lucide-react";
-import { Toggle } from "./ui/toggle";
+import { Check, Disc2, X } from "lucide-react";
+import { useDidUpdateEffect } from "@/hooks/DidUpdateHook";
 
 const SettingsPage = () => {
   let appSettingConfig = useSelector(
@@ -33,7 +33,6 @@ const SettingsPage = () => {
   const router = useRouter();
 
   const [recordPressed, setRecordPressed] = React.useState(false);
-  const [recordingShortcut, setRecordingShortcut] = React.useState("");
 
   const settingSechema = z
     .object({
@@ -121,19 +120,27 @@ const SettingsPage = () => {
     }
   };
 
-  const handleRecordShortcuts = (pressed) => {
-    setRecordPressed(pressed);
-    if (pressed) {
-      setRecordingShortcut(form.getValues("appWindowToggleShortcut"));
-      form.setValue("appWindowToggleShortcut", "请输入快捷键");
-    } else {
-      form.setValue("appWindowToggleShortcut", recordingShortcut);
-    }
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  });
+
+  const activeRecordingShortcut = () => {
+    setRecordPressed(true);
+    form.setValue("appWindowToggleShortcut", "请输入快捷键");
   };
 
-  const handleSaveShortcuts = () => {
+  const deactiveRecordingShortcut = (reset: boolean) => {
     setRecordPressed(false);
-    setRecordingShortcut(form.getValues("appWindowToggleShortcut"));
+    if (reset) {
+      form.setValue(
+        "appWindowToggleShortcut",
+        appSettingConfig.appWindowToggleShortcut
+      );
+    }
   };
 
   return (
@@ -150,34 +157,49 @@ const SettingsPage = () => {
             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
                 <FormLabel className="text-base">展示/隐藏窗口快捷键</FormLabel>
+                <FormMessage />
               </div>
-              <div className="flex w-1/2 gap-2">
+              <div className="flex justify-end w-1/2 gap-2">
                 <Input
-                  className="w-1/2 flex-grow bg-gray-300"
+                  className="grow bg-gray-300"
                   disabled
                   {...field}
                 />
-                <Button
-                  className={`px-2 transition-opacity ease-linear animate-in slide-in-from-right-4 duration-500 ${
-                    recordPressed ? "opacity-100" : "hidden opacity-0"
-                  }`}
-                  type="button"
-                  variant="outline"
-                  aria-label="Save Shortcuts"
-                  onClick={handleSaveShortcuts}
-                >
-                  <Check size={24} className="text-primary" strokeWidth={3} />
-                </Button>
-                <Toggle
-                  className="px-2"
-                  variant="outline"
-                  aria-label="Record Shortcuts"
-                  onKeyDown={handleKeyDown}
-                  pressed={recordPressed}
-                  onPressedChange={handleRecordShortcuts}
-                >
-                  <Disc2 size={24} className="text-primary" strokeWidth={3} />
-                </Toggle>
+                <div className="flex gap-1">
+                  <Button
+                    className={`px-2 ${
+                      recordPressed ? "hidden opacity-0" : "opacity-100"
+                    }`}
+                    type="button"
+                    variant="outline"
+                    aria-label="Record Shortcuts"
+                    onClick={() => activeRecordingShortcut()}
+                  >
+                    <Disc2 size={24} className="text-primary" strokeWidth={3} />
+                  </Button>
+                  <Button
+                    className={`px-2 ${
+                      recordPressed ? "opacity-100" : "hidden opacity-0"
+                    }`}
+                    type="button"
+                    variant="outline"
+                    aria-label="Save Shortcuts"
+                    onClick={() => deactiveRecordingShortcut(true)}
+                  >
+                    <X size={24} className="text-primary" strokeWidth={3} />
+                  </Button>
+                  <Button
+                    className={`px-2 ${
+                      recordPressed ? "opacity-100" : "hidden opacity-0"
+                    }`}
+                    type="button"
+                    variant="outline"
+                    aria-label="Save Shortcuts"
+                    onClick={() => deactiveRecordingShortcut(false)}
+                  >
+                    <Check size={24} className="text-primary" strokeWidth={3} />
+                  </Button>
+                </div>
               </div>
             </FormItem>
           )}

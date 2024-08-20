@@ -40,10 +40,12 @@ async function fetchInitialState() {
     try {
         const config = await window.ipc.invoke('setting:loadConfig');
         if (config) {
-            store.dispatch(setAppSettingConfig({
+            const combinedConfig = {
                 ...initialState,
                 ...config
-            }));
+            };
+            store.dispatch(setAppSettingConfig(combinedConfig));
+            log.info('Fetched initial state:', combinedConfig);
         }
     } catch (error) {
         log.error('Failed to fetch initial state:', error);

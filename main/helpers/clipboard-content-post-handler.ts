@@ -1,12 +1,12 @@
 import { ClipboardHisotryEntity } from "main/db/schemes";
 import { ocr } from "./ocr";
-import { db, settings } from "main/components/singletons";
 import log from "electron-log/main";
 import { compressionPicture, readPngMetadata } from "../utils/image";
 import { chatComplectionJsonFormatted, chatComplectionWithImageJsonFormatted } from "main/utils/ai";
 import { PNG } from "pngjs";
 import { app } from "electron";
 import { writeFileSync } from "original-fs";
+import { singletons } from "main/components/singletons";
 
 export async function postHandleClipboardContent(item: ClipboardHisotryEntity) {
     if (item.type === 'image') {
@@ -20,13 +20,13 @@ export async function postHandleClipboardContent(item: ClipboardHisotryEntity) {
                     height: img.height,
                     byteLength: Buffer.byteLength(item.blob)
                 })
-                db.updateClipboardHistoryDetails(item.hashKey, item.details)
+                singletons.db.updateClipboardHistoryDetails(item.hashKey, item.details)
                 return img
             })
             .then(img => ocr(item.blob).then(ocrResult => {
                 log.info(`[post-handler] {${item.hashKey}} Ocr result=${ocrResult}`);
                 item.text = ocrResult
-                db.updateClipboardHistoryText(item.hashKey, ocrResult)
+                singletons.db.updateClipboardHistoryText(item.hashKey, ocrResult)
                 return { ocrResult, img }
             }))
             .then(({ ocrResult, img }) => aiTag(item, img, ocrResult))
@@ -39,13 +39,13 @@ export async function postHandleClipboardContent(item: ClipboardHisotryEntity) {
         item.details = JSON.stringify({
             wordCount: item.text.split(/\s+/).length
         })
-        db.updateClipboardHistoryDetails(item.hashKey, item.details)
+        singletons.db.updateClipboardHistoryDetails(item.hashKey, item.details)
     }
 }
 
 // ai 打标签
 async function aiTag(item: ClipboardHisotryEntity, img: PNG, ocrResult: string) {
-    const config = settings.loadConfig();
+    const config = singletons.settings.loadConfig();
     if (!config?.aiTagEnable || !config?.openaiConfig) {
         return;
     }
@@ -116,6 +116,6 @@ async function aiTag(item: ClipboardHisotryEntity, img: PNG, ocrResult: string) 
             ...JSON.parse(item.details),
             tags: aiResponseJson.tags
         })
-        db.updateClipboardHistoryDetails(item.hashKey, item.details)
+        singletons.db.updateClipboardHistoryDetails(item.hashKey, item.details)
     }
 }
