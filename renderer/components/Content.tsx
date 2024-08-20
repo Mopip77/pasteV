@@ -613,7 +613,7 @@ const Content = () => {
       <div className="w-3/5 divide-y divide-gray-200">
         <div className="w-full h-2/3">
           <div className="h-full w-full overflow-x-auto break-words overflow-y-hidden hover:overflow-y-auto py-2 px-2 scrollbar-thin scrollbar-gutter-stable scrollbar-track-transparent scrollbar-thumb-slate-400 scrollbar-thumb-round-full bg-transparent">
-            {contentFC ? contentFC : "Loading..."}
+            {contentFC ? contentFC : histories.length > 0 ? "Loading..." : ""}
           </div>
           <div className="relative bottom-12">
             <div className="flex flex-row-reverse bg-transparent z-20 justify-start items-center py-1 pr-1 gap-2">
