@@ -528,15 +528,15 @@ const Content = () => {
             <TooltipProvider>
               <Tooltip delayDuration={100}>
                 <TooltipTrigger asChild>
-                  <Button
-                    size="icon"
-                    onClick={() => {
+                  <Toggle
+                    variant="outline"
+                    onPressedChange={() => {
                       reCopy(histories[selectedIndex]);
                       window.ipc.send("system:openUrl", "https://jsont.run/");
                     }}
                   >
                     <LucideExternalLink className="h-4 w-4" />
-                  </Button>
+                  </Toggle>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>复制并打开json编辑器</p>
