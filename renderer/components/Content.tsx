@@ -279,7 +279,8 @@ const Content = () => {
       return (
         <TransformWrapper
           smooth={false}
-          wheel={{ step: 0.1 }}
+          wheel={{ step: 0.1, wheelDisabled: true }}
+          panning={{ wheelPanning: true }}
           doubleClick={{ mode: "toggle" }}
         >
           <TransformComponent
