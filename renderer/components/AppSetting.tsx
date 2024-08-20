@@ -213,7 +213,7 @@ const SettingsPage = () => {
         )}
         <div className="w-full max-w-3xl fixed bottom-20 h-4">
           <div className="w-full flex justify-around">
-            <Button variant="secondary" onClick={onCancel}>
+            <Button type="button" variant="secondary" onClick={onCancel}>
               Cancel
             </Button>
             <Button type="submit">Submit</Button>
