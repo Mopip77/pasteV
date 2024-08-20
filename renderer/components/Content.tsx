@@ -447,9 +447,14 @@ const Content = () => {
     const blob = new Blob([imageBuffer], { type: "image/png" });
     const url = URL.createObjectURL(blob);
 
+    const details: ClipboardHistoryEntityDetail = JSON.parse(
+      histories[selectedIndex].details
+    );
+    const firstTag = details.tags?.[0] || "image";
+
     const link = document.createElement("a");
     link.href = url;
-    link.download = "image.png";
+    link.download = `${firstTag}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
