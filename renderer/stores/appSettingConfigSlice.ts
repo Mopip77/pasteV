@@ -4,6 +4,7 @@ import log from "electron-log/renderer";
 import store from "./store";
 
 let initialState: AppSettingConfig = {
+    appWindowToggleShortcut: "CommandOrControl+Shift+Option+V",
     aiTagEnable: false,
     imageInputType: 'text',
     openaiConfig: {

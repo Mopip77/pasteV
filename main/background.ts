@@ -2,7 +2,7 @@ import path from "path";
 import { app, ipcMain, globalShortcut } from "electron";
 import serve from "electron-serve";
 import { startReadingClipboardDaemon } from "./helpers/read-clipboard-daemon";
-import { initSingletons } from "./components/singletons";
+import { initSingletons, settings } from "./components/singletons";
 import createWindow from "./helpers/create-window";
 import { registerHandlers } from "./helpers/ipc-handlers";
 import log from "electron-log/main";
@@ -61,8 +61,7 @@ log.info("background process started");
     }
   });
 
-  const shortcutKey = isProd ? "CommandOrControl+Shift+Option+V" : "CommandOrControl+Shift+J";
-  globalShortcut.register(shortcutKey, () => {
+  globalShortcut.register(settings.loadConfig().appWindowToggleShortcut, () => {
     if (mainWindow.isVisible()) {
       mainWindow.hide();
     } else {
