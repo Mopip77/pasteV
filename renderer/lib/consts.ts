@@ -10,3 +10,5 @@ export const HIGHLIGHT_LANGUAGES = [
     "xml",
     "curl",
 ]
+
+export const APP_WINDOW_TOGGLE_SHORTCUT = "CommandOrControl+Shift+Option+V";

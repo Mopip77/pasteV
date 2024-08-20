@@ -6,6 +6,7 @@ import { initSingletons, settings } from "./components/singletons";
 import createWindow from "./helpers/create-window";
 import { registerHandlers } from "./helpers/ipc-handlers";
 import log from "electron-log/main";
+import { APP_WINDOW_TOGGLE_SHORTCUT } from "@/lib/consts";
 
 const isProd = process.env.NODE_ENV === "production";
 let appQuit = false;
@@ -73,8 +74,7 @@ app.on("before-quit", () => {
 });
 
 export const registerAppWindowToggleShortcut = () => {
-  const newShorcut = settings.loadConfig().appWindowToggleShortcut;
-  log.info(`registerAppWindowToggleShortcut, old=${appWindowToggleShortcut}, new=${newShorcut}`);
+  const newShorcut = settings.loadConfig().appWindowToggleShortcut || APP_WINDOW_TOGGLE_SHORTCUT;
   if (appWindowToggleShortcut !== newShorcut) {
     if (appWindowToggleShortcut) {
       globalShortcut.unregister(appWindowToggleShortcut);

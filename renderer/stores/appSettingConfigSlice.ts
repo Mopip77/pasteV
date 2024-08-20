@@ -2,9 +2,10 @@ import { AppSettingConfig } from "@/types/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import log from "electron-log/renderer";
 import store from "./store";
+import { APP_WINDOW_TOGGLE_SHORTCUT } from "@/lib/consts";
 
 let initialState: AppSettingConfig = {
-    appWindowToggleShortcut: "CommandOrControl+Shift+Option+V",
+    appWindowToggleShortcut: APP_WINDOW_TOGGLE_SHORTCUT,
     aiTagEnable: false,
     imageInputType: 'text',
     openaiConfig: {
@@ -39,7 +40,10 @@ async function fetchInitialState() {
     try {
         const config = await window.ipc.invoke('setting:loadConfig');
         if (config) {
-            store.dispatch(setAppSettingConfig(config));
+            store.dispatch(setAppSettingConfig({
+                ...initialState,
+                ...config
+            }));
         }
     } catch (error) {
         log.error('Failed to fetch initial state:', error);
