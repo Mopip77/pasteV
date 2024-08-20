@@ -470,24 +470,24 @@ const Content = () => {
             <TooltipProvider>
               <Tooltip delayDuration={100}>
                 <TooltipTrigger>
-                  <Toggle className="" onPressedChange={handleSaveImage}>
-                    <Download className="h-4 w-4" />
-                  </Toggle>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>保存图片到本地</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip delayDuration={100}>
-                <TooltipTrigger>
                   <Toggle className="" onPressedChange={setShowOcrResult}>
                     <ScanTextIcon className="h-4 w-4" />
                   </Toggle>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>展示ocr结果</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip delayDuration={100}>
+                <TooltipTrigger>
+                  <Toggle className="" onPressedChange={handleSaveImage}>
+                    <Download className="h-4 w-4" />
+                  </Toggle>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>保存图片到本地</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
