@@ -14,7 +14,13 @@ import React, {
   useState,
 } from "react";
 import { Toggle } from "./ui/toggle";
-import { HeadingIcon, LucideExternalLink, ScanTextIcon } from "lucide-react";
+import {
+  HeadingIcon,
+  Image,
+  LetterText,
+  LucideExternalLink,
+  ScanTextIcon,
+} from "lucide-react";
 import { HIGHLIGHT_LANGUAGES } from "@/lib/consts";
 import log from "electron-log/renderer";
 import {
@@ -239,18 +245,29 @@ const Content = () => {
     }));
   };
 
-  const generateSummary = (item: ClipboardHisotryEntity): string => {
+  const generateSummary = (item: ClipboardHisotryEntity) => {
+    let icon;
+    let summary = "";
     if (item.type === "image") {
-      let summary = "Image";
+      summary = "Image";
       const detailJson = JSON.parse(item.details);
       if (detailJson.width && detailJson.height) {
         summary += ` (${detailJson.width}x${detailJson.height})`;
       } else {
         summary += "...";
       }
-      return summary;
+      icon = <Image />;
+    } else {
+      summary = item.text;
+      icon = <LetterText />;
     }
-    return item.text;
+
+    return (
+      <>
+        <div className="w-6 h-6 ml-1 mr-2 font-extrabold">{icon}</div>
+        <div className="flex-grow truncate text-sm text-gray-900">{summary}</div>
+      </>
+    );
   };
 
   const generateTags = (item: ClipboardHisotryEntity) => {
@@ -542,7 +559,7 @@ const Content = () => {
                       }}
                       style={style}
                     >
-                      <div className="flex-grow truncate">
+                      <div className="w-full flex items-center">
                         {generateSummary(histories[index])}
                       </div>
                       <div className="flex items-center">
