@@ -15,6 +15,7 @@ import React, {
 } from "react";
 import { Toggle } from "./ui/toggle";
 import {
+  Download,
   HeadingIcon,
   Image,
   LetterText,
@@ -265,7 +266,9 @@ const Content = () => {
     return (
       <>
         <div className="w-6 h-6 ml-1 mr-2 font-extrabold">{icon}</div>
-        <div className="flex-grow truncate text-sm text-gray-900">{summary}</div>
+        <div className="flex-grow truncate text-sm text-gray-900">
+          {summary}
+        </div>
       </>
     );
   };
@@ -439,6 +442,21 @@ const Content = () => {
     }
   }, [selectedIndex]);
 
+  const handleSaveImage = () => {
+    const imageBuffer = histories[selectedIndex].blob;
+    const blob = new Blob([imageBuffer], { type: "image/png" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "image.png";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+  };
+
   const showContentHelpButtons = useMemo(() => {
     console.debug("re render help buttons", selectedIndex, highlightInfo);
     if (selectedIndex < 0) {
@@ -448,18 +466,32 @@ const Content = () => {
     if (histories[selectedIndex].type === "image") {
       if (histories[selectedIndex].text) {
         return (
-          <TooltipProvider>
-            <Tooltip delayDuration={100}>
-              <TooltipTrigger>
-                <Toggle className="" onPressedChange={setShowOcrResult}>
-                  <ScanTextIcon className="h-4 w-4" />
-                </Toggle>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>展示ocr结果</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <>
+            <TooltipProvider>
+              <Tooltip delayDuration={100}>
+                <TooltipTrigger>
+                  <Toggle className="" onPressedChange={handleSaveImage}>
+                    <Download className="h-4 w-4" />
+                  </Toggle>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>保存图片到本地</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip delayDuration={100}>
+                <TooltipTrigger>
+                  <Toggle className="" onPressedChange={setShowOcrResult}>
+                    <ScanTextIcon className="h-4 w-4" />
+                  </Toggle>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>展示ocr结果</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </>
         );
       }
     }
