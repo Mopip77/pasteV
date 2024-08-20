@@ -1,5 +1,4 @@
-import React from "react";
-import log from "electron-log/renderer";
+import React, { KeyboardEvent } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/stores/store";
 import { updateAppSettingConfig } from "@/stores/appSettingConfigSlice";
@@ -23,6 +22,8 @@ import { useRouter } from "next/router";
 import { Toaster } from "./ui/toaster";
 import { toast } from "./ui/use-toast";
 import { cn } from "@/lib/utils";
+import { Check, Disc2 } from "lucide-react";
+import { Toggle } from "./ui/toggle";
 
 const SettingsPage = () => {
   let appSettingConfig = useSelector(
@@ -30,6 +31,9 @@ const SettingsPage = () => {
   );
   const dispatch = useDispatch();
   const router = useRouter();
+
+  const [recordPressed, setRecordPressed] = React.useState(false);
+  const [recordingShortcut, setRecordingShortcut] = React.useState("");
 
   const settingSechema = z
     .object({
@@ -79,7 +83,6 @@ const SettingsPage = () => {
   });
 
   const onSubmit = (data: any) => {
-    log.info("onSubmit", data);
     dispatch(updateAppSettingConfig(data));
     toast({
       title: "保存成功",
@@ -94,11 +97,50 @@ const SettingsPage = () => {
     router.back();
   };
 
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (!recordPressed) {
+      return;
+    }
+
+    e.stopPropagation();
+    e.preventDefault();
+
+    let keys = [];
+    if (e.metaKey || e.ctrlKey) {
+      keys.push("CommandOrControl");
+    }
+    if (e.shiftKey) {
+      keys.push("Shift");
+    }
+    if (e.altKey) {
+      keys.push("Alt");
+    }
+    if (e.key.length === 1) {
+      keys.push(e.key.toUpperCase());
+      form.setValue("appWindowToggleShortcut", keys.join("+"));
+    }
+  };
+
+  const handleRecordShortcuts = (pressed) => {
+    setRecordPressed(pressed);
+    if (pressed) {
+      setRecordingShortcut(form.getValues("appWindowToggleShortcut"));
+      form.setValue("appWindowToggleShortcut", "请输入快捷键");
+    } else {
+      form.setValue("appWindowToggleShortcut", recordingShortcut);
+    }
+  };
+
+  const handleSaveShortcuts = () => {
+    setRecordPressed(false);
+    setRecordingShortcut(form.getValues("appWindowToggleShortcut"));
+  };
+
   return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="w-full mx-auto flex flex-col space-y-4 my-4 h-[75vh] max-w-3xl overflow-y-scroll scrollbar-none"
+        className="max-w-3xl mx-auto flex flex-col space-y-4 my-4 h-[75vh] overflow-y-scroll scrollbar-none"
       >
         <h3 className="text-2xl font-bold">应用设置</h3>
         <FormField
@@ -109,7 +151,34 @@ const SettingsPage = () => {
               <div className="space-y-0.5">
                 <FormLabel className="text-base">展示/隐藏窗口快捷键</FormLabel>
               </div>
-              <Input className="w-1/2" {...field} />
+              <div className="flex w-1/2 gap-2">
+                <Input
+                  className="w-1/2 flex-grow bg-gray-300"
+                  disabled
+                  {...field}
+                />
+                <Button
+                  className={`px-2 transition-opacity ease-linear animate-in slide-in-from-right-4 duration-500 ${
+                    recordPressed ? "opacity-100" : "hidden opacity-0"
+                  }`}
+                  type="button"
+                  variant="outline"
+                  aria-label="Save Shortcuts"
+                  onClick={handleSaveShortcuts}
+                >
+                  <Check size={24} className="text-primary" strokeWidth={3} />
+                </Button>
+                <Toggle
+                  className="px-2"
+                  variant="outline"
+                  aria-label="Record Shortcuts"
+                  onKeyDown={handleKeyDown}
+                  pressed={recordPressed}
+                  onPressedChange={handleRecordShortcuts}
+                >
+                  <Disc2 size={24} className="text-primary" strokeWidth={3} />
+                </Toggle>
+              </div>
             </FormItem>
           )}
         />
