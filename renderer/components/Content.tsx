@@ -281,7 +281,7 @@ const Content = () => {
           smooth={false}
           wheel={{ step: 0.1, wheelDisabled: true }}
           panning={{ wheelPanning: true }}
-          doubleClick={{ mode: "toggle" }}
+          doubleClick={{ mode: "reset" }}
         >
           <TransformComponent
             wrapperStyle={{ width: "100%", height: "100%" }}
