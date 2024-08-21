@@ -12,11 +12,29 @@ import {
 } from "./ui/select";
 import { Separator } from "./ui/separator";
 import { SearchBodyContext } from "./ClipboardHistory";
+import { useHotkeys } from "react-hotkeys-hook";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
+import { TooltipArrow } from "@radix-ui/react-tooltip";
 
 const Header = () => {
   const { searchBody, setSearchBody } = useContext(SearchBodyContext);
 
-  const inputRef = React.useRef<HTMLInputElement>(null);
+  const inputRef = useHotkeys<HTMLInputElement>(
+    "mod+i",
+    () => {
+      console.log("mod+i");
+      setSearchBody((prev) => ({
+        ...prev,
+        regex: !prev.regex,
+      }));
+    },
+    { enableOnFormTags: true }
+  );
 
   // intialize component
   useEffect(() => {
@@ -28,6 +46,7 @@ const Header = () => {
   // 如果用户按键但不包含 modifers 则聚焦到搜索框
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      console.log("key event from header", e);
       // 如果当前焦点在输入框内则不处理
       if (e.target === inputRef.current) {
         return;
@@ -78,8 +97,11 @@ const Header = () => {
         }}
       />
       <div className="flex gap-1">
-        <Toggle
-          className={`
+        <TooltipProvider>
+          <Tooltip delayDuration={100}>
+            <TooltipTrigger>
+              <Toggle
+                className={`
           ${
             searchBody.keyword.length === 0
               ? "opacity-0 pointer-events-none cursor-default"
@@ -87,15 +109,27 @@ const Header = () => {
           }
           ease-in-out duration-500 transition-opacity
         `}
-          onPressedChange={(pressed) => {
-            setSearchBody((prev) => ({
-              ...prev,
-              regex: pressed,
-            }));
-          }}
-        >
-          <Regex />
-        </Toggle>
+                pressed={searchBody.regex}
+                onPressedChange={(pressed) => {
+                  setSearchBody((prev) => ({
+                    ...prev,
+                    regex: pressed,
+                  }));
+                }}
+              >
+                <Regex />
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="py-1.5">
+                <span>使用正则匹配</span>
+                <span className="bg-gray-300 bg-opacity-50 rounded-sm ml-2 pl-2 pr-3 py-1.5">
+                  ⌘ + i
+                </span>
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <Select
           value={searchBody.type}
           onValueChange={(value) => {
