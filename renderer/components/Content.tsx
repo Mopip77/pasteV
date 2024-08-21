@@ -36,7 +36,6 @@ import { debounce, throttle } from "@/lib/utils";
 import AutoSizer from "react-virtualized-auto-sizer";
 import { FixedSizeList } from "react-window";
 import InfiniteLoader from "react-window-infinite-loader";
-import { isHotkeyPressed } from "react-hotkeys-hook";
 
 interface HighlightResult {
   error?: Error;
@@ -628,6 +627,13 @@ const Content = () => {
                       style={style}
                     >
                       <div className="w-full flex items-center">
+                        {index < 5 && showQuickSelect && (
+                          <div
+                            className="absolute w-10 left-0 flex items-center justify-center py-2.5 pl-3 pr-5 text-white bg-zinc-400 rounded-r-full text-sm animate-in slide-in-from-left duration-300"
+                          >
+                            {`⌘+${index + 1}`}
+                          </div>
+                        )}
                         {generateSummary(histories[index])}
                       </div>
                       <div className="flex items-center">
