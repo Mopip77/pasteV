@@ -629,7 +629,7 @@ const Content = () => {
                       <div className="w-full flex items-center">
                         {index < 5 && showQuickSelect && (
                           <div
-                            className="absolute w-10 left-0 flex items-center justify-center py-2.5 pl-3 pr-5 text-white bg-zinc-400 rounded-r-full text-sm animate-in slide-in-from-left duration-300"
+                            className="absolute w-10 left-0 flex items-center justify-center py-2.5 pl-3 pr-5 text-white bg-[#3f4756ee] rounded-r-full text-sm animate-in slide-in-from-left duration-100"
                           >
                             {`⌘+${index + 1}`}
                           </div>
