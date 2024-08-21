@@ -3,7 +3,7 @@ import { singletons } from "main/components/singletons";
 import OpenAI from "openai";
 
 function generateClient(): OpenAI | undefined {
-    const openaiConfig = settings.loadConfig()?.openaiConfig;
+    const openaiConfig = singletons.settings.loadConfig()?.openaiConfig;
     if (!openaiConfig) {
         return undefined;
     }

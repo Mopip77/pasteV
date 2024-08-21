@@ -4,8 +4,6 @@ import log from "electron-log/main";
 import { compressionPicture, readPngMetadata } from "../utils/image";
 import { chatComplectionJsonFormatted, chatComplectionWithImageJsonFormatted } from "main/utils/ai";
 import { PNG } from "pngjs";
-import { app } from "electron";
-import { writeFileSync } from "original-fs";
 import { singletons } from "main/components/singletons";
 
 export async function postHandleClipboardContent(item: ClipboardHisotryEntity) {
@@ -45,7 +43,9 @@ export async function postHandleClipboardContent(item: ClipboardHisotryEntity) {
 
 // ai 打标签
 async function aiTag(item: ClipboardHisotryEntity, img: PNG, ocrResult: string) {
+    log.info(`[post-handler] {${item.hashKey}} aiTag, start, settings=${JSON.stringify(singletons.settings)}`)
     const config = singletons.settings.loadConfig();
+    log.info(`[post-handler] {${item.hashKey}} aiTag, start, settings=${JSON.stringify(singletons.settings)}`)
     if (!config?.aiTagEnable || !config?.openaiConfig) {
         return;
     }
