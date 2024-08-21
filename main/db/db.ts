@@ -41,7 +41,7 @@ class DatabaseManager {
                 last_read_time DATETIME NOT NULL
             );
 
-            CREATE INDEX IF NOT EXISTS idx_hash_key ON clipboard_history(hash_key);
+            CREATE UNIQUE INDEX IF NOT EXISTS uidx_hash_key ON clipboard_history(hash_key);
             CREATE INDEX IF NOT EXISTS idx_last_read_time ON clipboard_history(last_read_time);
             CREATE INDEX IF NOT EXISTS idx_type_text ON clipboard_history(type, text);
         `)
