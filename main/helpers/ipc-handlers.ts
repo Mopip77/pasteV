@@ -34,7 +34,7 @@ export const registerHandlers = (ipcMain) => {
                         log.error(`Error executing paste command: ${error}`);
                     }
                 });
-            }, 100);
+            }, 50);
         }
     })
     // system
