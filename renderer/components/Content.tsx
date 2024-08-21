@@ -30,13 +30,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
-import { Button } from "./ui/button";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 import { SearchBodyContext } from "./ClipboardHistory";
 import { debounce, throttle } from "@/lib/utils";
 import AutoSizer from "react-virtualized-auto-sizer";
 import { FixedSizeList } from "react-window";
 import InfiniteLoader from "react-window-infinite-loader";
+import { isHotkeyPressed } from "react-hotkeys-hook";
 
 interface HighlightResult {
   error?: Error;
@@ -57,6 +57,7 @@ const Content = () => {
   const highlightGereratorAbortController = useRef<AbortController | null>(
     null
   );
+  const [showQuickSelect, setShowQuickSelect] = useState<boolean>(false);
   const [contentFC, setContentFC] = useState(null);
   const [showHighlight, setShowHighlight] = useState<boolean>(false);
   const [showOcrResult, setShowOcrResult] = useState<boolean>(false);
@@ -128,7 +129,7 @@ const Content = () => {
     initComponent();
   }, [searchBody]);
 
-  // keyboard event
+  // navigation keyboard event
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "ArrowDown") {
@@ -160,6 +161,36 @@ const Content = () => {
       window.removeEventListener("mousemove", handleMouseMove);
     };
   }, [selectedIndex, histories]);
+
+  // quick select keyboard event
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Meta" || event.key === "Control") {
+        setShowQuickSelect(true);
+        return;
+      }
+
+      if (
+        ["1", "2", "3", "4", "5"].includes(event.key) &&
+        (event.metaKey || event.ctrlKey)
+      ) {
+        reCopy(histories[parseInt(event.key) - 1]);
+      }
+    };
+
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.key === "Meta" || event.key === "Control") {
+        setShowQuickSelect(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  });
 
   // scroll to selected index
   useEffect(() => {
