@@ -5,9 +5,9 @@ import { startReadingClipboardDaemon } from "./helpers/read-clipboard-daemon";
 import createWindow from "./helpers/create-window";
 import { registerHandlers } from "./helpers/ipc-handlers";
 import log from "electron-log/main";
-import { APP_WINDOW_TOGGLE_SHORTCUT } from "@/lib/consts";
 import { singletons } from "./components/singletons";
-import { ShortcutKey } from "./utils/consts";
+import { DEFAULT_APP_WINDOW_TOGGLE_SHORTCUT, ShortcutKey } from "./utils/consts";
+import { asyncCleanupHistory, registerCleanupScheduler } from "./helpers/cleanup-scheduler";
 
 const isProd = process.env.NODE_ENV === "production";
 let appQuit = false;
@@ -31,6 +31,11 @@ let mainWindow: Electron.BrowserWindow;
   singletons.initSingletons();
   startReadingClipboardDaemon();
   registerHandlers(ipcMain);
+
+  // Register cleanup scheduler
+  registerCleanupScheduler();
+  // 主动执行一次清理
+  asyncCleanupHistory();
 
   await app.whenReady();
 
@@ -64,7 +69,7 @@ let mainWindow: Electron.BrowserWindow;
   // Register global shortcuts
   singletons.shortcuts.registerGlobalShortcut(
     ShortcutKey.APP_WINDOW_TOGGLE_SHORTCUT,
-    singletons.settings.loadConfig().appWindowToggleShortcut || APP_WINDOW_TOGGLE_SHORTCUT,
+    singletons.settings.loadConfig().appWindowToggleShortcut || DEFAULT_APP_WINDOW_TOGGLE_SHORTCUT,
     () => {
       if (app.isHidden()) {
         app.show();

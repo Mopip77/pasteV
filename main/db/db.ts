@@ -168,6 +168,18 @@ class DatabaseManager {
         )
     }
 
+    // date 为 yyyy-MM-dd 格式
+    // 返回删除的记录数
+    public deleteLastReadTimeBefore(date: string): number {
+        const sql = this.db.prepare(`
+            DELETE FROM clipboard_history WHERE last_read_time < ?
+            `);
+
+        const info = sql.run(date);
+
+        return info.changes;
+    }
+
 }
 
 export default DatabaseManager
