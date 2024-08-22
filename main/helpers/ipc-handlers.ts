@@ -1,4 +1,4 @@
-import { BrowserWindow, Event } from "electron"
+import { app, Event } from "electron"
 import { ClipboardHisotryEntity, ListClipboardHistoryQuery } from "main/db/schemes"
 import { writeClipboard } from "main/utils/clipboard"
 import { exec } from "child_process"
@@ -9,10 +9,7 @@ import { ShortcutKey } from "main/utils/consts"
 export const registerHandlers = (ipcMain) => {
     // app
     ipcMain.on('app:hide', () => {
-        const mainWindow = BrowserWindow.getFocusedWindow();
-        if (mainWindow) {
-            mainWindow.hide();
-        }
+        app.hide();
     })
     ipcMain.on('app:toggleGlobalShortcuts', (event: Event, enable: boolean) => {
         if (enable) {
