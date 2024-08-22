@@ -119,7 +119,6 @@ const Content = () => {
 
   // intialize component
   useEffect(() => {
-    window.ipc.on("app:show", () => initComponent());
     initComponent();
   }, []);
 

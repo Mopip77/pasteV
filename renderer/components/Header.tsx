@@ -19,7 +19,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
-import { TooltipArrow } from "@radix-ui/react-tooltip";
 
 const Header = () => {
   const { searchBody, setSearchBody } = useContext(SearchBodyContext);
@@ -27,7 +26,6 @@ const Header = () => {
   const inputRef = useHotkeys<HTMLInputElement>(
     "mod+i",
     () => {
-      console.log("mod+i");
       setSearchBody((prev) => ({
         ...prev,
         regex: !prev.regex,
