@@ -1,4 +1,3 @@
-import log from "electron-log/main";
 import { ClipboardHisotryEntity, ListClipboardHistoryQuery } from "../db/schemes";
 import { LinkedDictionary } from 'typescript-collections';
 import { postHandleClipboardContent } from "main/helpers/clipboard-content-post-handler";
@@ -23,12 +22,17 @@ class ClipboardMemoCache {
         if (!this.caches.isEmpty()) {
             this.last = this.caches.values[this.caches.values.length - 1];
         }
-
-        log.debug("Loading histories from db, ", this.caches);
     }
 
     public add(data: ClipboardHisotryEntity) {
+        let existing = false;
         if (this.caches.containsKey(data.hashKey)) {
+            existing = true;
+        } else {
+            existing = singletons.db.getClipboardHistory(data.hashKey) !== undefined;
+        }
+
+        if (existing) {
             if (this.last?.hashKey === data.hashKey) {
                 return
             }
@@ -38,12 +42,12 @@ class ClipboardMemoCache {
             singletons.db.insertClipboardHistory(data)
             postHandleClipboardContent(data)
         }
+
         this.caches.setValue(data.hashKey, data)
         this.last = data
     }
 
     public query(queryBody: ListClipboardHistoryQuery): ClipboardHisotryEntity[] {
-        log.debug("query history, body=", queryBody)
         return singletons.db.listClipboardHistory(queryBody)
     }
 }

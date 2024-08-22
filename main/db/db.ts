@@ -56,6 +56,30 @@ class DatabaseManager {
         }
     }
 
+    public getClipboardHistory(hashKey: string): ClipboardHisotryEntity | undefined {
+        const query = this.db.prepare(`
+            SELECT id, type, text, blob, hash_key, create_time, last_read_time, details
+            FROM clipboard_history
+            WHERE hash_key = ?
+          `);
+
+        const row = query.get(hashKey);
+        if (!row) {
+            return undefined;
+        }
+
+        return {
+            id: row.id,
+            type: row.type,
+            text: row.text,
+            blob: row.blob,
+            hashKey: row.hash_key,
+            createTime: row.create_time,
+            lastReadTime: row.last_read_time,
+            details: row.details,
+        }
+    }
+
     public insertClipboardHistory(entity: ClipboardHisotryEntity) {
         const insert = this.db.prepare(`
             INSERT INTO clipboard_history (type, text, blob, hash_key, create_time, last_read_time, details)
