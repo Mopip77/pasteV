@@ -48,6 +48,15 @@ class ClipboardMemoCache {
     }
 
     public query(queryBody: ListClipboardHistoryQuery): ClipboardHisotryEntity[] {
+        if (queryBody.regex) {
+            // 检查正则表达式是否合法
+            try {
+                new RegExp(queryBody.keyword)
+            } catch (error) {
+                return []
+            }
+        }
+
         return singletons.db.listClipboardHistory(queryBody)
     }
 }
