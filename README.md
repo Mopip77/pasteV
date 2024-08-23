@@ -6,6 +6,7 @@ A clipboard history manager.
 
 - regex search
 - image ocr
+- LLM automatic labeling
 
 ## Installation
 
