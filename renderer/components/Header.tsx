@@ -97,16 +97,9 @@ const Header = () => {
       <div className="flex gap-1">
         <TooltipProvider>
           <Tooltip delayDuration={100}>
-            <TooltipTrigger>
+            <TooltipTrigger className={`${searchBody.keyword.length === 0 ? "pointer-events-none cursor-default" : ""}`}>
               <Toggle
-                className={`
-          ${
-            searchBody.keyword.length === 0
-              ? "opacity-0 pointer-events-none cursor-default"
-              : ""
-          }
-          ease-in-out duration-500 transition-opacity
-        `}
+                className={`${searchBody.keyword.length === 0 ? "opacity-0" : ""} ease-in-out duration-500 transition-opacity`}
                 pressed={searchBody.regex}
                 onPressedChange={(pressed) => {
                   setSearchBody((prev) => ({
