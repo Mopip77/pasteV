@@ -2,10 +2,11 @@ import { AppSettingConfig } from "@/types/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import log from "electron-log/renderer";
 import store from "./store";
-import { DEFAULT_APP_WINDOW_TOGGLE_SHORTCUT } from "@/../main/utils/consts";
+import { DEFAULT_APP_WINDOW_TOGGLE_SHORTCUT, DEFAULT_CLEANUP_DAYS } from "@/../main/utils/consts";
 
 let initialState: AppSettingConfig = {
     appWindowToggleShortcut: DEFAULT_APP_WINDOW_TOGGLE_SHORTCUT,
+    historyClearDays: DEFAULT_CLEANUP_DAYS,
     aiTagEnable: false,
     imageInputType: 'text',
     openaiConfig: {

@@ -23,7 +23,13 @@ import { Toaster } from "./ui/toaster";
 import { toast } from "./ui/use-toast";
 import { cn } from "@/lib/utils";
 import { Check, Disc2, X } from "lucide-react";
-import { useDidUpdateEffect } from "@/hooks/DidUpdateHook";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 const SettingsPage = () => {
   let appSettingConfig = useSelector(
@@ -37,6 +43,7 @@ const SettingsPage = () => {
   const settingSechema = z
     .object({
       appWindowToggleShortcut: z.string().min(1, { message: "不能为空" }),
+      historyClearDays: z.coerce.number().int(),
       aiTagEnable: z.boolean(),
       imageInputType: z.string(),
       openaiConfig: z.object({
@@ -75,6 +82,7 @@ const SettingsPage = () => {
     resolver: zodResolver(settingSechema),
     defaultValues: {
       appWindowToggleShortcut: appSettingConfig.appWindowToggleShortcut,
+      historyClearDays: appSettingConfig.historyClearDays,
       aiTagEnable: appSettingConfig.aiTagEnable,
       imageInputType: appSettingConfig.imageInputType,
       openaiConfig: appSettingConfig.openaiConfig,
@@ -160,11 +168,7 @@ const SettingsPage = () => {
                 <FormMessage />
               </div>
               <div className="flex justify-end w-1/2 gap-2">
-                <Input
-                  className="grow bg-gray-300"
-                  disabled
-                  {...field}
-                />
+                <Input className="grow bg-gray-300" disabled {...field} />
                 <div className="flex gap-1">
                   <Button
                     className={`px-2 ${
@@ -200,6 +204,36 @@ const SettingsPage = () => {
                     <Check size={24} className="text-primary" strokeWidth={3} />
                   </Button>
                 </div>
+              </div>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="historyClearDays"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div>
+                <FormLabel>历史记录保留天数</FormLabel>
+                <FormMessage />
+              </div>
+              <div className="w-1/4 min-w-40">
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value.toString()}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="选择天数" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="0">无限制</SelectItem>
+                    <SelectItem value="7">一周</SelectItem>
+                    <SelectItem value="30">一个月</SelectItem>
+                    <SelectItem value="365">一年</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </FormItem>
           )}
