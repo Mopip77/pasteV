@@ -48,7 +48,6 @@ let mainWindow: Electron.BrowserWindow;
       preload: path.join(__dirname, "preload.js"),
     },
   });
-  mainWindow.setVisibleOnAllWorkspaces(true);
 
   if (isProd) {
     await mainWindow.loadURL("app://./home");
@@ -72,6 +71,7 @@ let mainWindow: Electron.BrowserWindow;
     singletons.settings.loadConfig().appWindowToggleShortcut || DEFAULT_APP_WINDOW_TOGGLE_SHORTCUT,
     () => {
       if (app.isHidden()) {
+        mainWindow.setVisibleOnAllWorkspaces(true);
         app.show();
         mainWindow.webContents.send("app:show");
       } else {
@@ -82,7 +82,9 @@ let mainWindow: Electron.BrowserWindow;
 })();
 
 app.on("activate", () => {
+  mainWindow.setVisibleOnAllWorkspaces(true);
   app.show();
+  mainWindow.webContents.send("app:show");
 });
 
 if (isProd) {
