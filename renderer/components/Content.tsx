@@ -323,7 +323,10 @@ const Content = () => {
     ));
   };
 
-  const renderContent = (item: ClipboardHisotryEntity, searchBody: SearchBody) => {
+  const renderContent = (
+    item: ClipboardHisotryEntity,
+    searchBody: SearchBody
+  ) => {
     if (item?.type === "image" && item.blob) {
       const base64String = Buffer.from(item.blob).toString("base64");
       return (
@@ -347,7 +350,11 @@ const Content = () => {
         </TransformWrapper>
       );
     } else {
-      const highlightedContent = highlightSearchTextOnContent(item.text, searchBody.keyword, searchBody.regex);
+      const highlightedContent = highlightSearchTextOnContent(
+        item.text,
+        searchBody.keyword,
+        searchBody.regex
+      );
       return (
         <pre
           style={{ fontFamily: "inherit" }}
@@ -434,17 +441,13 @@ const Content = () => {
     }
 
     const escapedHtml = escapeHtml(content);
-    if (regex) {
-      return escapedHtml.replace(
-        new RegExp(searchKey, "g"),
-        '<span style="background-color: powderblue;">$&</span>'
-      );
-    } else {
-      return escapedHtml.replace(
-        searchKey,
-        `<span style="background-color: powderblue;">${searchKey}</span>`
-      );
-    }
+    const pattern = regex
+      ? new RegExp(searchKey, "gi")
+      : new RegExp(searchKey.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "gi");
+    return escapedHtml.replace(
+      pattern,
+      `<span style="background-color: powderblue;">$&</span>`
+    );
   };
 
   const showContent = useCallback(() => {
