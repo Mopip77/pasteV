@@ -36,6 +36,7 @@ import { debounce, throttle } from "@/lib/utils";
 import AutoSizer from "react-virtualized-auto-sizer";
 import { FixedSizeList } from "react-window";
 import InfiniteLoader from "react-window-infinite-loader";
+import { SearchBody } from "@/types/types";
 
 interface HighlightResult {
   error?: Error;
@@ -322,7 +323,7 @@ const Content = () => {
     ));
   };
 
-  const renderContent = (item: ClipboardHisotryEntity) => {
+  const renderContent = (item: ClipboardHisotryEntity, searchBody: SearchBody) => {
     if (item?.type === "image" && item.blob) {
       const base64String = Buffer.from(item.blob).toString("base64");
       return (
@@ -346,13 +347,14 @@ const Content = () => {
         </TransformWrapper>
       );
     } else {
+      const highlightedContent = highlightSearchTextOnContent(item.text, searchBody.keyword, searchBody.regex);
+      log.info("highlightedContent", highlightedContent);
       return (
         <pre
           style={{ fontFamily: "inherit" }}
           className="whitespace-pre-wrap z-10"
-        >
-          {item.text}
-        </pre>
+          dangerouslySetInnerHTML={{ __html: highlightedContent }}
+        />
       );
     }
   };
@@ -418,6 +420,34 @@ const Content = () => {
     return details;
   };
 
+  const highlightSearchTextOnContent = (
+    content: string,
+    searchKey: string,
+    regex: boolean
+  ): string => {
+    function escapeHtml(content: string) {
+      return content
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    const escapedHtml = escapeHtml(content);
+    if (regex) {
+      return escapedHtml.replace(
+        new RegExp(searchKey, "g"),
+        '<span style="background-color: powderblue;">$&</span>'
+      );
+    } else {
+      return escapedHtml.replace(
+        searchKey,
+        `<span style="background-color: powderblue;">${searchKey}</span>`
+      );
+    }
+  };
+
   const showContent = useCallback(() => {
     log.log("re render showContent", selectedIndex, showHighlight);
     if (selectedIndex >= 0) {
@@ -449,7 +479,7 @@ const Content = () => {
           </pre>
         );
       }
-      return renderContent(histories[selectedIndex]);
+      return renderContent(histories[selectedIndex], searchBody);
     }
   }, [selectedIndex, showHighlight, showOcrResult]);
 
@@ -627,9 +657,7 @@ const Content = () => {
                     >
                       <div className="w-full flex items-center">
                         {index < 5 && showQuickSelect && (
-                          <div
-                            className="absolute w-10 left-0 flex items-center justify-center py-2.5 pl-3 pr-5 text-white bg-[#3f4756ee] rounded-r-full text-sm animate-in slide-in-from-left duration-100"
-                          >
+                          <div className="absolute w-10 left-0 flex items-center justify-center py-2.5 pl-3 pr-5 text-white bg-[#3f4756ee] rounded-r-full text-sm animate-in slide-in-from-left duration-100">
                             {`⌘+${index + 1}`}
                           </div>
                         )}
