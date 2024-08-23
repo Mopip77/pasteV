@@ -348,7 +348,6 @@ const Content = () => {
       );
     } else {
       const highlightedContent = highlightSearchTextOnContent(item.text, searchBody.keyword, searchBody.regex);
-      log.info("highlightedContent", highlightedContent);
       return (
         <pre
           style={{ fontFamily: "inherit" }}
