@@ -1,12 +1,11 @@
 import { globalShortcut } from "electron";
-import { ShortcutKey } from "main/utils/consts";
 
 export class ShortcutManager {
 
-    private globalTagMap = new Map<ShortcutKey, string>();
+    private globalTagMap = new Map<string, string>();
     private globalShortcutMap = new Map<string, () => void>();
 
-    public registerGlobalShortcut(tag: ShortcutKey, shortcut: string, callback: () => void) {
+    public registerGlobalShortcut(tag: string, shortcut: string, callback: () => void) {
         if (this.globalTagMap.has(tag)) {
             globalShortcut.unregister(this.globalTagMap.get(tag));
         }
@@ -15,7 +14,7 @@ export class ShortcutManager {
         globalShortcut.register(shortcut, callback);
     }
 
-    public replaceGlobalShortcut(tag: ShortcutKey, newShortcut: string) {
+    public replaceGlobalShortcut(tag: string, newShortcut: string) {
         if (!this.globalTagMap.has(tag)) {
             return;
         }

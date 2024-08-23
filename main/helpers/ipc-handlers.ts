@@ -4,7 +4,7 @@ import { writeClipboard } from "main/utils/clipboard"
 import { exec } from "child_process"
 import log from "electron-log/main"
 import { singletons } from "main/components/singletons"
-import { ShortcutKey } from "main/utils/consts"
+import { SHORTCUT_KEY_APP_WINDOW_TOGGLE_SHORTCUT } from "main/utils/consts"
 
 export const registerHandlers = (ipcMain) => {
     // app
@@ -42,7 +42,7 @@ export const registerHandlers = (ipcMain) => {
         singletons.settings.saveConfig(configStr);
         // 更新快捷键
         singletons.shortcuts.replaceGlobalShortcut(
-            ShortcutKey.APP_WINDOW_TOGGLE_SHORTCUT,
+            SHORTCUT_KEY_APP_WINDOW_TOGGLE_SHORTCUT,
             singletons.settings.loadConfig().appWindowToggleShortcut
         );
     })

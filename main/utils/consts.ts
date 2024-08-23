@@ -1,6 +1,4 @@
-export enum ShortcutKey {
-    APP_WINDOW_TOGGLE_SHORTCUT
-};
+export const SHORTCUT_KEY_APP_WINDOW_TOGGLE_SHORTCUT = "APP_WINDOW_TOGGLE_SHORTCUT";
 
 // settings
 export const DEFAULT_APP_WINDOW_TOGGLE_SHORTCUT = "CommandOrControl+Shift+Option+V";

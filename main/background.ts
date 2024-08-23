@@ -6,7 +6,7 @@ import createWindow from "./helpers/create-window";
 import { registerHandlers } from "./helpers/ipc-handlers";
 import log from "electron-log/main";
 import { singletons } from "./components/singletons";
-import { DEFAULT_APP_WINDOW_TOGGLE_SHORTCUT, ShortcutKey } from "./utils/consts";
+import { DEFAULT_APP_WINDOW_TOGGLE_SHORTCUT, SHORTCUT_KEY_APP_WINDOW_TOGGLE_SHORTCUT } from "./utils/consts";
 import { asyncCleanupHistory, registerCleanupScheduler } from "./helpers/cleanup-scheduler";
 
 const isProd = process.env.NODE_ENV === "production";
@@ -68,7 +68,7 @@ let mainWindow: Electron.BrowserWindow;
 
   // Register global shortcuts
   singletons.shortcuts.registerGlobalShortcut(
-    ShortcutKey.APP_WINDOW_TOGGLE_SHORTCUT,
+    SHORTCUT_KEY_APP_WINDOW_TOGGLE_SHORTCUT,
     singletons.settings.loadConfig().appWindowToggleShortcut || DEFAULT_APP_WINDOW_TOGGLE_SHORTCUT,
     () => {
       if (app.isHidden()) {
