@@ -431,6 +431,10 @@ const Content = () => {
     searchKey: string,
     regex: boolean
   ): string => {
+    if (!searchKey) {
+      return content;
+    }
+
     function escapeHtml(content: string) {
       return content
         .replace(/&/g, "&amp;")
