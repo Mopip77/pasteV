@@ -99,6 +99,12 @@ const Content = () => {
     return result;
   };
 
+  useEffect(() => {
+    window.ipc.on("app:show", () => {
+      initComponent();
+    });
+  });
+
   const initComponent = throttle(async () => {
     handleSelectionChange(-1);
     setHistories([]);
@@ -120,9 +126,6 @@ const Content = () => {
 
   // intialize component
   useEffect(() => {
-    window.ipc.on("app:show", () => {
-      initComponent();
-    });
     initComponent();
   }, []);
 
@@ -226,7 +229,7 @@ const Content = () => {
     setContentFC(null);
     const content = showContent();
     setContentFC(content);
-  }, [selectedIndex, showHighlight, showOcrResult]);
+  }, [histories, selectedIndex, showHighlight, showOcrResult]);
 
   // async generate highlight info
   useEffect(() => {
@@ -490,7 +493,7 @@ const Content = () => {
       }
       return renderContent(histories[selectedIndex], searchBody);
     }
-  }, [selectedIndex, showHighlight, showOcrResult]);
+  }, [histories, selectedIndex, showHighlight, showOcrResult]);
 
   const showDetails = useMemo(() => {
     if (selectedIndex >= 0) {
