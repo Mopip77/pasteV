@@ -1,6 +1,7 @@
 import { generateHashKey, readClipboard } from "../utils/clipboard"
 import { ClipboardHisotryEntity } from "../db/schemes";
 import { singletons } from "main/components/singletons";
+import { MAX_STORED_TEXT_BYTE_LENGTH } from "main/utils/consts";
 
 export const startReadingClipboardDaemon = () => {
     setInterval(() => {
@@ -14,6 +15,9 @@ export const startReadingClipboardDaemon = () => {
             case "file":
                 text = clipboardData.text
                 if (!text) {
+                    return
+                }
+                if (new Blob([text]).size > MAX_STORED_TEXT_BYTE_LENGTH) {
                     return
                 }
                 break
