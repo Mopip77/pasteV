@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { Input } from "./ui/input";
 import { Toggle } from "./ui/toggle";
 import { Regex } from "lucide-react";
@@ -22,6 +22,8 @@ import {
 
 const Header = () => {
   const { searchBody, setSearchBody } = useContext(SearchBodyContext);
+  const [inputValue, setInputValue] = useState(searchBody.keyword);
+  let compositionStart = useRef(false);
 
   const inputRef = useHotkeys<HTMLInputElement>(
     "mod+i",
@@ -33,6 +35,26 @@ const Header = () => {
     },
     { enableOnFormTags: true }
   );
+
+  function _onChange(event) {
+    setInputValue(event.target.value);
+
+    if (event.type === "compositionstart") {
+      compositionStart.current = true;
+      return;
+    }
+
+    if (event.type === "compositionend") {
+      compositionStart.current = false;
+    }
+
+    if (!compositionStart.current) {
+      setSearchBody((prev) => ({
+        ...prev,
+        keyword: event.target.value,
+      }));
+    }
+  }
 
   // intialize component
   useEffect(() => {
@@ -72,13 +94,11 @@ const Header = () => {
         className="h-full focus-visible:ring-transparent focus-visible:ring-offset-transparent border-none"
         placeholder="Input to search..."
         ref={inputRef}
-        value={searchBody.keyword}
-        onChange={(e) =>
-          setSearchBody((prev) => ({
-            ...prev,
-            keyword: e.target.value,
-          }))
-        }
+        value={inputValue}
+        onCompositionUpdate={_onChange}
+        onCompositionStart={_onChange}
+        onCompositionEnd={_onChange}
+        onChange={_onChange}
         onKeyDown={(e) => {
           if (e.key === "ArrowUp" || e.key === "ArrowDown") {
             e.preventDefault();
@@ -97,9 +117,17 @@ const Header = () => {
       <div className="flex gap-1">
         <TooltipProvider>
           <Tooltip delayDuration={100}>
-            <TooltipTrigger className={`${searchBody.keyword.length === 0 ? "pointer-events-none cursor-default" : ""}`}>
+            <TooltipTrigger
+              className={`${
+                searchBody.keyword.length === 0
+                  ? "pointer-events-none cursor-default"
+                  : ""
+              }`}
+            >
               <Toggle
-                className={`${searchBody.keyword.length === 0 ? "opacity-0" : ""} ease-in-out duration-500 transition-opacity`}
+                className={`${
+                  searchBody.keyword.length === 0 ? "opacity-0" : ""
+                } ease-in-out duration-500 transition-opacity`}
                 pressed={searchBody.regex}
                 onPressedChange={(pressed) => {
                   setSearchBody((prev) => ({
