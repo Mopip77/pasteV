@@ -1,6 +1,7 @@
 interface SearchBody {
     keyword: string
     regex: boolean
+    usingEmbedding: boolean
     type: string
 }
 

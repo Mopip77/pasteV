@@ -70,6 +70,7 @@ const Content = () => {
     offset = 0,
     size = batchSize,
     regex = false,
+    usingEmbedding = false,
     type = "",
   } = {}) => {
     log.debug(
@@ -81,12 +82,15 @@ const Content = () => {
       size,
       "regex=",
       regex,
+      "usingEmbedding=",
+      usingEmbedding,
       "type=",
       type
     );
     const result = await global.window.ipc.invoke("clipboard:query", {
       keyword,
       regex,
+      usingEmbedding,
       type,
       offset,
       size,
@@ -116,6 +120,7 @@ const Content = () => {
       offset: 0,
       size: batchSize,
       regex: searchBody.regex,
+      usingEmbedding: searchBody.usingEmbedding,
       type: searchBody.type,
     });
     setHistories(results);
@@ -267,6 +272,7 @@ const Content = () => {
         offset: histories.length,
         size: batchSize,
         regex: searchBody.regex,
+        usingEmbedding: searchBody.usingEmbedding,
         type: searchBody.type,
       });
       setHistories((prevHistories) => [...prevHistories, ...moreHistories]);

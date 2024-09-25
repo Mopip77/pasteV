@@ -5,6 +5,7 @@ import { compressionPicture, readPngMetadata } from "../utils/image";
 import { chatComplectionJsonFormatted, chatComplectionWithImageJsonFormatted } from "main/utils/ai";
 import { PNG } from "pngjs";
 import { singletons } from "main/components/singletons";
+import { app } from "electron";
 
 export async function postHandleClipboardContent(item: ClipboardHisotryEntity) {
     if (item.type === 'image') {
@@ -31,6 +32,8 @@ export async function postHandleClipboardContent(item: ClipboardHisotryEntity) {
             .catch(err => {
                 log.error(`[post-handler] {${item.hashKey}} Error=${err}`);
             })
+        
+        aiEmbeddings(item)
     }
 
     if (item.type === 'text') {
@@ -118,4 +121,21 @@ async function aiTag(item: ClipboardHisotryEntity, img: PNG, ocrResult: string) 
         })
         singletons.db.updateClipboardHistoryDetails(item.hashKey, item.details)
     }
+}
+
+// 生成 embeddings
+async function aiEmbeddings(item: ClipboardHisotryEntity) {
+    const clip = singletons.clip.getClip()
+    if (!clip) {
+        return
+    }
+
+    const dt = new Date()
+    clip.processImages([item.blob])
+        .then(imgs => {
+            const embeddings = clip.computeImageEmbeddingsJs(imgs)
+            log.info(`[post-handler] {${item.hashKey}} embeddings.length=${embeddings[0].length}, cost=${new Date().getTime() - dt.getTime()}ms`)
+
+            singletons.db.insertEmbeddings(item.hashKey, embeddings[0])
+        })
 }

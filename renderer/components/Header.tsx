@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { Input } from "./ui/input";
 import { Toggle } from "./ui/toggle";
-import { Regex } from "lucide-react";
+import { Brain, Regex } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -115,6 +115,37 @@ const Header = () => {
         }}
       />
       <div className="flex gap-1">
+        <TooltipProvider>
+          <Tooltip delayDuration={100}>
+            <TooltipTrigger
+              className={`${
+                searchBody.keyword.length === 0
+                  ? "pointer-events-none cursor-default"
+                  : ""
+              }`}
+            >
+              <Toggle
+                className={`${
+                  searchBody.keyword.length === 0 ? "opacity-0" : ""
+                } ease-in-out duration-500 transition-opacity`}
+                pressed={searchBody.usingEmbedding}
+                onPressedChange={(pressed) => {
+                  setSearchBody((prev) => ({
+                    ...prev,
+                    usingEmbedding: pressed,
+                  }));
+                }}
+              >
+                <Brain />
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="py-1.5">
+                <span>使用语义搜索</span>
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <TooltipProvider>
           <Tooltip delayDuration={100}>
             <TooltipTrigger

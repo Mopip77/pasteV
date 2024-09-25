@@ -13,6 +13,7 @@ const ClipboardHistory = () => {
   const [searchBody, setSearchBody] = React.useState<SearchBody>({
     keyword: "",
     regex: false,
+    usingEmbedding: false,
     type: "",
   });
 
