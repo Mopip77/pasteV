@@ -337,8 +337,8 @@ const Content = () => {
       return <></>;
     }
 
-    if (item?.type === "image" && item.blob) {
-      const base64String = Buffer.from(item.blob).toString("base64");
+    if (item.type === "image" && item.blob) {
+      const base64String = Buffer.from(new Uint8Array(item.blob)).toString("base64");
       return (
         <TransformWrapper
           smooth={false}
