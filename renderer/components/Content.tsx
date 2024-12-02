@@ -437,10 +437,6 @@ const Content = () => {
     searchKey: string,
     regex: boolean
   ): string => {
-    if (!searchKey) {
-      return content;
-    }
-
     function escapeHtml(content: string) {
       return content
         .replace(/&/g, "&amp;")
@@ -451,6 +447,10 @@ const Content = () => {
     }
 
     const escapedHtml = escapeHtml(content);
+    if (!searchKey) {
+      return escapedHtml;
+    }
+
     const pattern = regex
       ? new RegExp(searchKey, "gi")
       : new RegExp(searchKey.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "gi");
