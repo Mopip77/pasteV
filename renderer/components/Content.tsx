@@ -333,6 +333,10 @@ const Content = () => {
     item: ClipboardHisotryEntity,
     searchBody: SearchBody
   ) => {
+    if (!item) {
+      return <></>;
+    }
+
     if (item?.type === "image" && item.blob) {
       const base64String = Buffer.from(item.blob).toString("base64");
       return (
