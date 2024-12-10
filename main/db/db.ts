@@ -193,6 +193,21 @@ class DatabaseManager {
         return info.changes;
     }
 
+    public insertTagRelation(hashKey: string, tags: string[]) {
+        if (!hashKey || tags.length === 0) {
+            return;
+        }
+
+        const insertSql = this.db.prepare(`
+            INSERT INTO tag_relation (name, clipboard_history_hash_key, create_time)
+            VALUES (?, ?, ?)
+          `);
+
+        tags.forEach(tag => {
+            insertSql.run(tag, hashKey, new Date().toISOString());
+        })
+    }
+
 }
 
 export default DatabaseManager

@@ -117,5 +117,6 @@ async function aiTag(item: ClipboardHisotryEntity, img: PNG, ocrResult: string) 
             tags: aiResponseJson.tags
         })
         singletons.db.updateClipboardHistoryDetails(item.hashKey, item.details)
+        singletons.db.insertTagRelation(item.hashKey, aiResponseJson.tags)
     }
 }
