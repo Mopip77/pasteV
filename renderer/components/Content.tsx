@@ -362,11 +362,6 @@ const Content = () => {
           wheel={{ step: 0.1, wheelDisabled: true }}
           panning={{ wheelPanning: true }}
           doubleClick={{ mode: "reset" }}
-          wrapperStyle={{
-            width: "100%",
-            height: "100%",
-            zIndex: "1", // 添加较低的 z-index
-          }}
         >
           <TransformComponent
             wrapperStyle={{ width: "100%", height: "100%" }}
