@@ -1,7 +1,8 @@
-interface SearchBody {
+export interface SearchBody {
     keyword: string
     regex: boolean
     type: string
+    tags: string[]
 }
 
 interface OpenaiConfig {

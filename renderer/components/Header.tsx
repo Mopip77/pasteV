@@ -19,11 +19,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
+import { MultiSelect } from "./ui/multi-select";
 
 const Header = () => {
   const { searchBody, setSearchBody } = useContext(SearchBodyContext);
   const [inputValue, setInputValue] = useState(searchBody.keyword);
   let compositionStart = useRef(false);
+  const [tagOptions, setTagOptions] = useState<string[]>([]);
+  const multiSelectRef = useRef<HTMLDivElement>(null);
 
   const inputRef = useHotkeys<HTMLInputElement>(
     "mod+i",
@@ -63,12 +66,13 @@ const Header = () => {
     });
   }, []);
 
-  // 如果用户按键但不包含 modifers 则聚焦到搜索框
+  // 修改键盘事件处理
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      console.log("key event from header", e);
-      // 如果当前焦点在输入框内则不处理
-      if (e.target === inputRef.current) {
+      // 检查当前焦点元素是否是任何输入框
+      const isInputFocused = document.activeElement?.tagName === 'INPUT';
+      
+      if (isInputFocused) {
         return;
       }
 
@@ -86,6 +90,15 @@ const Header = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
+  }, []);
+
+  const fetchTags = async (filter: string = "") => {
+    const tags = await window.ipc.invoke("tags:query", filter);
+    setTagOptions(tags);
+  };
+
+  useEffect(() => {
+    fetchTags();
   }, []);
 
   return (
@@ -114,7 +127,7 @@ const Header = () => {
           }
         }}
       />
-      <div className="flex gap-1">
+      <div className="flex gap-1 items-start">
         <TooltipProvider>
           <Tooltip delayDuration={100}>
             <TooltipTrigger
@@ -149,6 +162,22 @@ const Header = () => {
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
+        <div className="relative">
+          <MultiSelect
+            className="min-w-[20px] max-w-[600px]"
+            ref={multiSelectRef}
+            value={searchBody.tags}
+            onChange={(tags) => {
+              setSearchBody(prev => ({
+                ...prev,
+                tags
+              }));
+            }}
+            onInputChange={fetchTags}
+            options={tagOptions}
+            placeholder="tags..."
+          />
+        </div>
         <Select
           value={searchBody.type}
           onValueChange={(value) => {

@@ -29,6 +29,7 @@ interface ListClipboardHistoryQuery {
     type?: sting
     offset?: number
     size: number
+    tags?: string[]
 }
 
 export type {

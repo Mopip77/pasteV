@@ -124,19 +124,32 @@ class DatabaseManager {
             keywordFilterClause += "AND (type = ?)"
         }
 
+        if (query.tags && query.tags.length > 0) {
+            const placeholders = query.tags.map(() => '?').join(',');
+            keywordFilterClause += `
+                AND hash_key IN (
+                    SELECT clipboard_history_hash_key 
+                    FROM tag_relation 
+                    WHERE name IN (${placeholders})
+                    GROUP BY clipboard_history_hash_key 
+                    HAVING COUNT(DISTINCT name) = ${query.tags.length}
+                )
+            `;
+            queryParams.push(...query.tags);
+        }
+
         const querySql = this.db.prepare(`
             SELECT id, type, text, blob, hash_key, create_time, last_read_time, details
             FROM clipboard_history
             WHERE 1 = 1 ${keywordFilterClause}
             ORDER BY last_read_time DESC
             LIMIT ?, ?
-          `);
+        `);
+        
         queryParams.push(query.offset || 0)
         queryParams.push(query.size)
 
-        return querySql.all(
-            queryParams
-        ).map(row => ({
+        return querySql.all(queryParams).map(row => ({
             id: row.id,
             type: row.type,
             text: row.text,
@@ -218,6 +231,17 @@ class DatabaseManager {
 
         const info = sql.run();
         return info.changes;
+    }
+
+    public queryTags(filter: string = ""): string[] {
+        const sql = `
+        SELECT DISTINCT name as tag
+        FROM tag_relation
+        WHERE name LIKE ?
+        ORDER BY name
+        `;
+
+        return this.db.prepare(sql).all([`%${filter}%`]).map(row => row.tag);
     }
 
 }

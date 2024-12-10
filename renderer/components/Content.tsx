@@ -71,6 +71,7 @@ const Content = () => {
     size = batchSize,
     regex = false,
     type = "",
+    tags = [],
   } = {}) => {
     log.debug(
       "fetchHistory, keyword=",
@@ -82,7 +83,9 @@ const Content = () => {
       "regex=",
       regex,
       "type=",
-      type
+      type,
+      "tags=",
+      tags
     );
     const result = await global.window.ipc.invoke("clipboard:query", {
       keyword,
@@ -90,6 +93,7 @@ const Content = () => {
       type,
       offset,
       size,
+      tags,
     });
 
     if (result.length !== size) {
@@ -117,6 +121,7 @@ const Content = () => {
       size: batchSize,
       regex: searchBody.regex,
       type: searchBody.type,
+      tags: searchBody.tags,
     });
     setHistories(results);
     if (results.length > 0) {
@@ -268,6 +273,7 @@ const Content = () => {
         size: batchSize,
         regex: searchBody.regex,
         type: searchBody.type,
+        tags: searchBody.tags,
       });
       setHistories((prevHistories) => [...prevHistories, ...moreHistories]);
     }
@@ -293,9 +299,11 @@ const Content = () => {
       } else {
         summary += "...";
       }
-      const base64String = Buffer.from(new Uint8Array(item.blob)).toString("base64");
+      const base64String = Buffer.from(new Uint8Array(item.blob)).toString(
+        "base64"
+      );
       icon = (
-        <img 
+        <img
           src={`data:image/png;base64,${base64String}`}
           className="w-6 h-6 object-cover rounded"
           alt="thumbnail"
@@ -345,13 +353,20 @@ const Content = () => {
     }
 
     if (item.type === "image" && item.blob) {
-      const base64String = Buffer.from(new Uint8Array(item.blob)).toString("base64");
+      const base64String = Buffer.from(new Uint8Array(item.blob)).toString(
+        "base64"
+      );
       return (
         <TransformWrapper
           smooth={false}
           wheel={{ step: 0.1, wheelDisabled: true }}
           panning={{ wheelPanning: true }}
           doubleClick={{ mode: "reset" }}
+          wrapperStyle={{
+            width: "100%",
+            height: "100%",
+            zIndex: "1", // 添加较低的 z-index
+          }}
         >
           <TransformComponent
             wrapperStyle={{ width: "100%", height: "100%" }}
@@ -634,83 +649,93 @@ const Content = () => {
   }, [selectedIndex, highlightInfo]);
 
   return (
-    <div className="flex h-full divide-x divide-gray-200">
-      <div className="w-2/5">
-        <AutoSizer>
-          {({ width, height }) => (
-            <InfiniteLoader
-              isItemLoaded={(index) =>
-                noMoreHistory || index < histories.length - 1
-              }
-              itemCount={histories.length}
-              loadMoreItems={loadMoreItems}
-            >
-              {({ onItemsRendered, ref }) => (
-                <FixedSizeList
-                  width={width}
-                  height={height}
-                  itemSize={40}
-                  itemCount={histories.length}
-                  onItemsRendered={onItemsRendered}
-                  ref={ref}
-                  className="scrollbar-none"
-                >
-                  {({ index, style }) => (
-                    <li
-                      key={index}
-                      ref={(el) => {
-                        listRefs.current[index] = el;
-                      }}
-                      className={`flex items-center px-2 rounded-lg ${
-                        index === mouseUpIndex ? "bg-blue-200" : ""
-                      } ${index === selectedIndex ? "bg-blue-400" : ""}`}
-                      onMouseOver={() => {
-                        hidePointer || setMouseIndex(index);
-                      }}
-                      onMouseOut={() => {
-                        setMouseIndex(-1);
-                      }}
-                      onClick={() => {
-                        handleSelectionChange(index);
-                      }}
-                      onDoubleClick={() => {
-                        reCopy(histories[index]);
-                      }}
-                      style={style}
-                    >
-                      <div className="w-full flex items-center">
-                        {index < 5 && showQuickSelect && (
-                          <div className="absolute w-10 left-0 flex items-center justify-center py-2.5 pl-3 pr-5 text-white bg-[#3f4756ee] rounded-r-full text-sm animate-in slide-in-from-left duration-100">
-                            {`⌘+${index + 1}`}
-                          </div>
-                        )}
-                        {generateSummary(histories[index])}
-                      </div>
-                      <div className="flex items-center">
-                        {generateTags(histories[index])}
-                      </div>
-                    </li>
-                  )}
-                </FixedSizeList>
-              )}
-            </InfiniteLoader>
-          )}
-        </AutoSizer>
-      </div>
-      <div className="w-3/5 divide-y divide-gray-200">
-        <div className="w-full h-2/3">
-          <div className="h-full w-full overflow-x-auto break-words overflow-y-hidden hover:overflow-y-auto py-2 px-2 scrollbar-thin scrollbar-gutter-stable scrollbar-track-transparent scrollbar-thumb-slate-400 scrollbar-thumb-round-full bg-transparent">
-            {contentFC ? contentFC : histories.length > 0 ? "Loading..." : ""}
-          </div>
-          <div className="relative bottom-12">
-            <div className="flex flex-row-reverse bg-transparent z-20 justify-start items-center py-1 pr-1 gap-2">
-              {showContentHelpButtons}
+    <>
+      <div className="flex h-full divide-x divide-gray-200">
+        <div className="w-2/5">
+          <AutoSizer>
+            {({ width, height }) => (
+              <InfiniteLoader
+                isItemLoaded={(index) =>
+                  noMoreHistory || index < histories.length - 1
+                }
+                itemCount={histories.length}
+                loadMoreItems={loadMoreItems}
+              >
+                {({ onItemsRendered, ref }) => (
+                  <FixedSizeList
+                    width={width}
+                    height={height}
+                    itemSize={40}
+                    itemCount={histories.length}
+                    onItemsRendered={onItemsRendered}
+                    ref={ref}
+                    className="scrollbar-none"
+                  >
+                    {({ index, style }) => (
+                      <li
+                        key={index}
+                        ref={(el) => {
+                          listRefs.current[index] = el;
+                        }}
+                        className={`flex items-center px-2 rounded-lg ${
+                          index === mouseUpIndex ? "bg-blue-200" : ""
+                        } ${index === selectedIndex ? "bg-blue-400" : ""}`}
+                        onMouseOver={() => {
+                          hidePointer || setMouseIndex(index);
+                        }}
+                        onMouseOut={() => {
+                          setMouseIndex(-1);
+                        }}
+                        onClick={() => {
+                          handleSelectionChange(index);
+                        }}
+                        onDoubleClick={() => {
+                          reCopy(histories[index]);
+                        }}
+                        style={style}
+                      >
+                        <div className="w-full flex items-center">
+                          {index < 5 && showQuickSelect && (
+                            <div className="absolute w-10 left-0 flex items-center justify-center py-2.5 pl-3 pr-5 text-white bg-[#3f4756ee] rounded-r-full text-sm animate-in slide-in-from-left duration-100">
+                              {`⌘+${index + 1}`}
+                            </div>
+                          )}
+                          {generateSummary(histories[index])}
+                        </div>
+                        <div className="flex items-center">
+                          {generateTags(histories[index])}
+                        </div>
+                      </li>
+                    )}
+                  </FixedSizeList>
+                )}
+              </InfiniteLoader>
+            )}
+          </AutoSizer>
+        </div>
+        <div className="w-3/5 divide-y divide-gray-200">
+          <div className="w-full h-2/3 relative">
+            <div className="h-full w-full overflow-x-auto break-words overflow-y-hidden hover:overflow-y-auto py-2 px-2 scrollbar-thin scrollbar-gutter-stable scrollbar-track-transparent scrollbar-thumb-slate-400 scrollbar-thumb-round-full bg-transparent">
+              {contentFC ? contentFC : histories.length > 0 ? "Loading..." : ""}
+            </div>
+            <div className="relative bottom-12">
+              <div className="flex flex-row-reverse bg-transparent z-20 justify-start items-center py-1 pr-1 gap-2">
+                {showContentHelpButtons}
+              </div>
             </div>
           </div>
+          <div className="h-1/3 flex flex-col-reverse">{showDetails}</div>
         </div>
-        <div className="h-1/3 flex flex-col-reverse">{showDetails}</div>
       </div>
-    </div>
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="relative w-full h-full">
+          <div
+            id="dropdown-portal"
+            className="absolute top-0 left-0 right-0 pointer-events-auto"
+          />
+        </div>
+      </div>
+    </>
   );
 };
 

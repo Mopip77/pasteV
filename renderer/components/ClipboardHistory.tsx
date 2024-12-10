@@ -14,6 +14,7 @@ const ClipboardHistory = () => {
     keyword: "",
     regex: false,
     type: "",
+    tags: [],
   });
 
   return (

@@ -46,4 +46,7 @@ export const registerHandlers = (ipcMain) => {
             singletons.settings.loadConfig().appWindowToggleShortcut
         );
     })
+
+    // tags query
+    ipcMain.handle('tags:query', (event: Event, filter: string) => singletons.db.queryTags(filter))
 }
