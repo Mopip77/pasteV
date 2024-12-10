@@ -44,6 +44,8 @@ let mainWindow: Electron.BrowserWindow;
     height: 600,
     center: true,
     frame: false,
+    skipTaskbar: true,
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
@@ -51,10 +53,12 @@ let mainWindow: Electron.BrowserWindow;
 
   if (isProd) {
     await mainWindow.loadURL("app://./home");
+    mainWindow.show();
   } else {
     mainWindow.webContents.openDevTools();
     const port = process.argv[2];
     await mainWindow.loadURL(`http://localhost:${port}/home`);
+    mainWindow.show();
   }
 
   // Hide the window instead of quitting the app
@@ -70,12 +74,12 @@ let mainWindow: Electron.BrowserWindow;
     SHORTCUT_KEY_APP_WINDOW_TOGGLE_SHORTCUT,
     singletons.settings.loadConfig().appWindowToggleShortcut || DEFAULT_APP_WINDOW_TOGGLE_SHORTCUT,
     () => {
-      if (app.isHidden()) {
+      if (!mainWindow.isVisible()) {
         mainWindow.setVisibleOnAllWorkspaces(true);
-        app.show();
+        mainWindow.show();
         mainWindow.webContents.send("app:show");
       } else {
-        app.hide();
+        mainWindow.hide();
       }
     }
   )
@@ -83,13 +87,13 @@ let mainWindow: Electron.BrowserWindow;
 
 app.on("activate", () => {
   mainWindow.setVisibleOnAllWorkspaces(true);
-  app.show();
+  mainWindow.show();
   mainWindow.webContents.send("app:show");
 });
 
 if (isProd) {
   app.on("browser-window-blur", () => {
-    app.hide();
+    mainWindow.hide();
   });
 }
 
