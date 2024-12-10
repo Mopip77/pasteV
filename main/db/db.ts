@@ -208,6 +208,18 @@ class DatabaseManager {
         })
     }
 
+    public cleanNotRelatedTags() {
+        const sql = this.db.prepare(`
+            DELETE FROM tag_relation 
+            WHERE clipboard_history_hash_key NOT IN (
+                SELECT hash_key FROM clipboard_history
+            )
+        `);
+
+        const info = sql.run();
+        return info.changes;
+    }
+
 }
 
 export default DatabaseManager

@@ -18,8 +18,10 @@ export const asyncCleanupHistory = async () => {
     const pastDateString = pastDate.toISOString().split('T')[0];
 
     const deletedCount = singletons.db.deleteLastReadTimeBefore(pastDateString);
-
     log.info(`Cleanup history, configured day is ${days}, clean before ${pastDateString}, deleted count ${deletedCount}`);
+
+    const deletedTagCount = singletons.db.cleanNotRelatedTags();
+    log.info(`Cleanup not related tags, deleted count ${deletedTagCount}`);
 }
 
 export const registerCleanupScheduler = () => {
