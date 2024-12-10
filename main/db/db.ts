@@ -46,6 +46,19 @@ class DatabaseManager {
             CREATE INDEX IF NOT EXISTS idx_type_text ON clipboard_history(type, text);
         `)
 
+        // add tag table
+        this.db.exec(`
+            CREATE TABLE IF NOT EXISTS tag_relation (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                clipboard_history_hash_key TEXT NOT NULL,
+                create_time DATETIME NOT NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_name ON tag_relation(name);
+            CREATE INDEX IF NOT EXISTS idx_clipboard_history_hash_key ON tag_relation(clipboard_history_hash_key);
+        `)
+
         // add details column
         const columns: { name: string }[] = this.db.pragma('table_info(clipboard_history)');
         const hasDetailColumn = columns.some(column => column.name === 'details');
