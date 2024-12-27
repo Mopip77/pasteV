@@ -134,7 +134,7 @@ const SettingsPage = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  });
+  }, []);
 
   const activeRecordingShortcut = () => {
     setRecordPressed(true);

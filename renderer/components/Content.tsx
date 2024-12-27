@@ -275,7 +275,7 @@ const Content = () => {
         type: searchBody.type,
         tags: searchBody.tags,
       });
-      setHistories((prevHistories) => [...prevHistories, ...moreHistories]);
+      histories.push(...moreHistories);
     }
   };
 
@@ -299,11 +299,13 @@ const Content = () => {
       } else {
         summary += "...";
       }
+      // icon = <Image />;
       const base64String = Buffer.from(new Uint8Array(item.blob)).toString(
         "base64"
       );
       icon = (
         <img
+          loading="lazy"
           src={`data:image/png;base64,${base64String}`}
           className="w-6 h-6 object-cover rounded"
           alt="thumbnail"
@@ -556,7 +558,7 @@ const Content = () => {
 
   const showContentHelpButtons = useMemo(() => {
     console.debug("re render help buttons", selectedIndex, highlightInfo);
-    if (selectedIndex < 0) {
+    if (selectedIndex < 0 || !histories[selectedIndex]) {
       return;
     }
 
