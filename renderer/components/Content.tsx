@@ -140,27 +140,28 @@ const Content = () => {
   }, [searchBody]);
 
   // navigation keyboard event
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    if (event.key === "ArrowDown") {
-      setSelectedIndex(prev => 
-        Math.min(prev + 1, histories.length - 1)
-      );
-      setHidePointer(true);
-      setMouseIndex(-1);
-    } else if (event.key === "ArrowUp") {
-      setSelectedIndex(prev => {
-        const listIsEmpty = histories.length === 0;
-        return Math.max(prev - 1, listIsEmpty ? -1 : 0);
-      });
-      setHidePointer(true);
-      setMouseIndex(-1);
-    } else if (event.key === "Enter") {
-      const selectedItem = histories[selectedIndex];
-      if (selectedItem) {
-        reCopy(selectedItem);
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (event.key === "ArrowDown") {
+        setSelectedIndex((prev) => Math.min(prev + 1, histories.length - 1));
+        setHidePointer(true);
+        setMouseIndex(-1);
+      } else if (event.key === "ArrowUp") {
+        setSelectedIndex((prev) => {
+          const listIsEmpty = histories.length === 0;
+          return Math.max(prev - 1, listIsEmpty ? -1 : 0);
+        });
+        setHidePointer(true);
+        setMouseIndex(-1);
+      } else if (event.key === "Enter") {
+        const selectedItem = histories[selectedIndex];
+        if (selectedItem) {
+          reCopy(selectedItem);
+        }
       }
-    }
-  }, [histories.length]);
+    },
+    [histories.length]
+  );
 
   const handleMouseMove = useCallback(() => {
     setHidePointer(false);
@@ -234,11 +235,11 @@ const Content = () => {
   );
 
   // async generate content
-  useEffect(() => {
+  useEffect(debounce(() => {
     setContentFC(null);
     const content = showContent();
     setContentFC(content);
-  }, [histories, selectedIndex, showHighlight, showOcrResult]);
+  }, 100), [histories, selectedIndex, showHighlight, showOcrResult]);
 
   // async generate highlight info
   useEffect(() => {
