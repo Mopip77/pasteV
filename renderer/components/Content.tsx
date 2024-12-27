@@ -62,6 +62,7 @@ const Content = () => {
   const [showHighlight, setShowHighlight] = useState<boolean>(false);
   const [showOcrResult, setShowOcrResult] = useState<boolean>(false);
   const listRefs = useRef<(HTMLLIElement | null)[]>([]);
+  const [detailsFC, setDetailsFC] = useState(null);
 
   const batchSize = 40;
 
@@ -217,16 +218,16 @@ const Content = () => {
   }, [selectedIndex]);
 
   const debouncedHighlightFunc = useCallback(
-    debounce(async (item: ClipboardHisotryEntity) => {
+    debounce(async (item: ClipboardHisotryEntity, abortController: AbortController) => {
       try {
-        log.debug("start to hilight");
+        setHighlightInfo(undefined);
         const result = await asyncGenerateHighlightInfo(item);
-        if (!highlightGereratorAbortController.current.signal.aborted) {
+        if (!abortController.signal.aborted) {
           setHighlightInfo(result);
         }
       } catch (error) {
         log.error("highlight error", error);
-        if (!highlightGereratorAbortController.current.signal.aborted) {
+        if (!abortController.signal.aborted) {
           setHighlightInfo({ error });
         }
       }
@@ -234,12 +235,77 @@ const Content = () => {
     []
   );
 
-  // async generate content
-  useEffect(debounce(() => {
-    setContentFC(null);
-    const content = showContent();
-    setContentFC(content);
-  }, 100), [histories, selectedIndex, showHighlight, showOcrResult]);
+  const showContent = (
+    histories: ClipboardHisotryEntity[],
+    selectedIndex: number,
+    showHighlight: boolean,
+    showOcrResult: boolean,
+    highlightInfo: HighlightResult | undefined,
+    searchBody: SearchBody
+  ) => {
+    log.log("re render showContent", selectedIndex, showHighlight);
+    if (selectedIndex >= 0) {
+      if (showHighlight) {
+        if (highlightInfo?.error) {
+          return (
+            <pre
+              style={{ fontFamily: "inherit" }}
+              className="whitespace-pre-wrap"
+            >
+              {highlightInfo.error.message}
+            </pre>
+          );
+        }
+        return (
+          <pre
+            style={{ fontFamily: "inherit" }}
+            className="whitespace-pre-wrap"
+            dangerouslySetInnerHTML={{ __html: highlightInfo.highlightHtml }}
+          ></pre>
+        );
+      } else if (showOcrResult) {
+        return (
+          <pre
+            style={{ fontFamily: "inherit" }}
+            className="whitespace-pre-wrap"
+          >
+            {histories[selectedIndex].text}
+          </pre>
+        );
+      }
+      return renderContent(histories[selectedIndex], searchBody);
+    }
+  };
+
+  // 1. 创建一个 debounced 函数
+  const debouncedSetContentFC = useCallback(
+    debounce((
+      histories: ClipboardHisotryEntity[],
+      selectedIndex: number,
+      showHighlight: boolean,
+      showOcrResult: boolean,
+      highlightInfo: HighlightResult | undefined,
+      searchBody: SearchBody
+    ) => {
+      setContentFC(null);
+      const content = showContent(histories, selectedIndex, showHighlight, showOcrResult, highlightInfo, searchBody);
+      setContentFC(content);
+    }, 100),
+    [] // 空依赖数组，确保 debounced 函数只创建一次
+  );
+
+  // 2. 在 useEffect 中调用这个 debounced 函数
+  useEffect(() => {
+    debouncedSetContentFC(histories, selectedIndex, showHighlight, showOcrResult, highlightInfo, searchBody);
+  }, [
+    histories,
+    selectedIndex,
+    showHighlight,
+    showOcrResult,
+    highlightInfo,
+    searchBody,
+    debouncedSetContentFC,
+  ]);
 
   // async generate highlight info
   useEffect(() => {
@@ -249,8 +315,10 @@ const Content = () => {
         highlightGereratorAbortController.current.abort();
       }
       highlightGereratorAbortController.current = new AbortController();
-      log.debug("before hilight");
-      debouncedHighlightFunc(histories[selectedIndex]);
+      debouncedHighlightFunc(
+        histories[selectedIndex], 
+        highlightGereratorAbortController.current
+      );
     } else {
       setHighlightInfo(undefined);
       setShowHighlight(false);
@@ -488,59 +556,6 @@ const Content = () => {
     );
   };
 
-  const showContent = useCallback(() => {
-    log.log("re render showContent", selectedIndex, showHighlight);
-    if (selectedIndex >= 0) {
-      if (showHighlight) {
-        if (highlightInfo?.error) {
-          return (
-            <pre
-              style={{ fontFamily: "inherit" }}
-              className="whitespace-pre-wrap"
-            >
-              {highlightInfo.error.message}
-            </pre>
-          );
-        }
-        return (
-          <pre
-            style={{ fontFamily: "inherit" }}
-            className="whitespace-pre-wrap"
-            dangerouslySetInnerHTML={{ __html: highlightInfo.highlightHtml }}
-          ></pre>
-        );
-      } else if (showOcrResult) {
-        return (
-          <pre
-            style={{ fontFamily: "inherit" }}
-            className="whitespace-pre-wrap"
-          >
-            {histories[selectedIndex].text}
-          </pre>
-        );
-      }
-      return renderContent(histories[selectedIndex], searchBody);
-    }
-  }, [histories, selectedIndex, showHighlight, showOcrResult]);
-
-  const showDetails = useMemo(() => {
-    if (selectedIndex >= 0) {
-      return (
-        <ul className="flex flex-col divide-y divide-gray-300">
-          {generateDetails(histories[selectedIndex]).map((item, index) => (
-            <li
-              key={index}
-              className="w-full text-sm text-gray-500 flex justify-between px-2 py-1"
-            >
-              <span className="font-bold">{item.label}</span>
-              <span>{item.value}</span>
-            </li>
-          ))}
-        </ul>
-      );
-    }
-  }, [selectedIndex]);
-
   const handleSaveImage = () => {
     const imageBuffer = histories[selectedIndex].blob;
     const blob = new Blob([imageBuffer], { type: "image/png" });
@@ -650,6 +665,32 @@ const Content = () => {
     }
   }, [selectedIndex, highlightInfo]);
 
+  const debouncedSetDetailsFC = useCallback(
+    debounce((clipBoardItem: ClipboardHisotryEntity) => {
+      setDetailsFC(null);
+      if (clipBoardItem) {
+        setDetailsFC(
+          <ul className="flex flex-col divide-y divide-gray-300">
+            {generateDetails(clipBoardItem).map((item, index) => (
+              <li
+                key={index}
+                className="w-full text-sm text-gray-500 flex justify-between px-2 py-1"
+              >
+                <span className="font-bold">{item.label}</span>
+                <span>{item.value}</span>
+              </li>
+            ))}
+          </ul>
+        );
+      }
+    }, 100),
+    []
+  );
+
+  useEffect(() => {
+    debouncedSetDetailsFC(histories[selectedIndex]);
+  }, [histories, selectedIndex, debouncedSetDetailsFC]);
+
   return (
     <>
       <div className="flex h-full divide-x divide-gray-200">
@@ -726,7 +767,9 @@ const Content = () => {
               </div>
             </div>
           </div>
-          <div className="h-1/3 flex flex-col-reverse">{showDetails}</div>
+          <div className="h-1/3 flex flex-col-reverse">
+            {detailsFC ? detailsFC : histories.length > 0 ? "Loading..." : ""}
+          </div>
         </div>
       </div>
       <div className="fixed inset-0 pointer-events-none">
