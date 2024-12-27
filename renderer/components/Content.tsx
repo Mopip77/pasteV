@@ -140,37 +140,41 @@ const Content = () => {
   }, [searchBody]);
 
   // navigation keyboard event
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "ArrowDown") {
-        handleSelectionChange((prevIndex) =>
-          Math.min(prevIndex + 1, histories.length - 1)
-        );
-        setHidePointer(true);
-        setMouseIndex(-1);
-      } else if (event.key === "ArrowUp") {
-        handleSelectionChange((prevIndex) => {
-          const listIsEmpty = histories.length === 0;
-          return Math.max(prevIndex - 1, listIsEmpty ? -1 : 0);
-        });
-        setHidePointer(true);
-        setMouseIndex(-1);
-      } else if (event.key === "Enter") {
-        reCopy(histories[selectedIndex]);
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (event.key === "ArrowDown") {
+      setSelectedIndex(prev => 
+        Math.min(prev + 1, histories.length - 1)
+      );
+      setHidePointer(true);
+      setMouseIndex(-1);
+    } else if (event.key === "ArrowUp") {
+      setSelectedIndex(prev => {
+        const listIsEmpty = histories.length === 0;
+        return Math.max(prev - 1, listIsEmpty ? -1 : 0);
+      });
+      setHidePointer(true);
+      setMouseIndex(-1);
+    } else if (event.key === "Enter") {
+      const selectedItem = histories[selectedIndex];
+      if (selectedItem) {
+        reCopy(selectedItem);
       }
-    };
+    }
+  }, [histories.length]);
 
-    const handleMouseMove = () => {
-      setHidePointer(false);
-    };
+  const handleMouseMove = useCallback(() => {
+    setHidePointer(false);
+  }, []);
 
+  // 事件监听只需要设置一次
+  useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("mousemove", handleMouseMove);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("mousemove", handleMouseMove);
     };
-  }, [selectedIndex, histories]);
+  }, [handleKeyDown, handleMouseMove]);
 
   // quick select keyboard event
   useEffect(() => {
