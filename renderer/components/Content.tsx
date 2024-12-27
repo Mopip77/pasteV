@@ -304,18 +304,18 @@ const Content = () => {
       } else {
         summary += "...";
       }
-      // icon = <Image />;
-      const base64String = Buffer.from(new Uint8Array(item.blob)).toString(
-        "base64"
-      );
-      icon = (
-        <img
-          loading="lazy"
-          src={`data:image/png;base64,${base64String}`}
-          className="w-6 h-6 object-cover rounded"
-          alt="thumbnail"
-        />
-      );
+      icon = <Image />;
+      // const base64String = Buffer.from(new Uint8Array(item.blob)).toString(
+      //   "base64"
+      // );
+      // icon = (
+      //   <img
+      //     loading="lazy"
+      //     src={`data:image/png;base64,${base64String}`}
+      //     className="w-6 h-6 object-cover rounded"
+      //     alt="thumbnail"
+      //   />
+      // );
     } else {
       summary = item.text;
       icon = <LetterText />;
