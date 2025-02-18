@@ -161,7 +161,7 @@ const Content = () => {
         }
       }
     },
-    [histories.length]
+    [histories.length, selectedIndex]
   );
 
   const handleMouseMove = useCallback(() => {
