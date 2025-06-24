@@ -28,6 +28,9 @@ const Header = () => {
   const [tagOptions, setTagOptions] = useState<string[]>([]);
   const multiSelectRef = useRef<HTMLDivElement>(null);
 
+  // 类型循环顺序
+  const typeOrder = ["text", "image", "file", "all"];
+
   const inputRef = useHotkeys<HTMLInputElement>(
     "mod+i",
     () => {
@@ -35,6 +38,30 @@ const Header = () => {
         ...prev,
         regex: !prev.regex,
       }));
+    },
+    { enableOnFormTags: true }
+  );
+
+  // 添加 cmd+p 循环切换类型
+  useHotkeys(
+    "mod+p",
+    () => {
+      const currentType = searchBody.type === "" ? "all" : searchBody.type;
+      const currentIndex = typeOrder.indexOf(currentType);
+      const nextIndex = (currentIndex + 1) % typeOrder.length;
+      const nextType = typeOrder[nextIndex];
+
+      if (nextType === "all") {
+        setSearchBody((prev) => ({
+          ...prev,
+          type: "",
+        }));
+      } else {
+        setSearchBody((prev) => ({
+          ...prev,
+          type: nextType,
+        }));
+      }
     },
     { enableOnFormTags: true }
   );
@@ -70,8 +97,8 @@ const Header = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // 检查当前焦点元素是否是任何输入框
-      const isInputFocused = document.activeElement?.tagName === 'INPUT';
-      
+      const isInputFocused = document.activeElement?.tagName === "INPUT";
+
       if (isInputFocused) {
         return;
       }
@@ -168,9 +195,9 @@ const Header = () => {
             ref={multiSelectRef}
             value={searchBody.tags}
             onChange={(tags) => {
-              setSearchBody(prev => ({
+              setSearchBody((prev) => ({
                 ...prev,
-                tags
+                tags,
               }));
             }}
             onInputChange={fetchTags}
@@ -215,6 +242,18 @@ const Header = () => {
               <SelectItem key="all" value="all">
                 ALL
               </SelectItem>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p className="text-xs text-muted-foreground px-2 py-1.5">
+                      循环切换类型: ⌘ + p
+                    </p>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>使用快捷键循环切换类型</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </SelectGroup>
           </SelectContent>
         </Select>
