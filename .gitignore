@@ -13,3 +13,7 @@ next-env.d.ts
 dist
 
 .DS_Store
+
+.cursor/
+
+CLAUDE.md
