@@ -1,0 +1,136 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Setup Embedding Generation for Text",
+        "description": "Integrate text embedding generation for clipboard text data using OpenAI's text-embedding-3-small model.",
+        "details": "Trigger embedding generation upon saving new text to clipboard history. Call OpenAI API to generate embeddings.",
+        "testStrategy": "Mock API calls, confirm embeddings are generated and saved properly.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Setup Embedding Generation for Images",
+        "description": "Integrate image description and embedding generation using OpenAI's models for clipboard images.",
+        "details": "Generate image descriptions using OpenAI’s gpt-4-vision-preview and convert descriptions to embeddings.",
+        "testStrategy": "Mock API calls, validate descriptions and embeddings generation.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Database Schema Update for Embeddings",
+        "description": "Add a new table to store embeddings in SQLite and ensure relational integrity with clipboard history.",
+        "details": "Create clipboard_embeddings table with proper schema and foreign key constraints.",
+        "testStrategy": "Schema validation, test constraint enforcement.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Implement Semantic Search Logic",
+        "description": "Develop back-end logic for semantic search using embeddings in clipboard history.",
+        "details": "Compute cosine similarity between query and stored embeddings, sort results by relevance.",
+        "testStrategy": "Unit tests for cosine similarity computations, integration tests for search results.",
+        "priority": "high",
+        "dependencies": [
+          1,
+          2,
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Add UI Controls for Semantic Search",
+        "description": "Develop UI components to enable semantic search feature and toggle in search interface.",
+        "details": "Create a toggle button for enabling semantic search. Update UI to handle both regular and semantic search input.",
+        "testStrategy": "UI tests to verify toggle functionality and search interactions.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Integrate Search Logic with UI",
+        "description": "Connect UI search controls with semantic search backend implementation.",
+        "details": "Listen for toggle activation, execute semantic search upon user request.",
+        "testStrategy": "End-to-end tests from UI to search results validation.",
+        "priority": "high",
+        "dependencies": [
+          4,
+          5
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Error Handling and Retry Mechanism",
+        "description": "Implement robust error handling for API failures and add retry logic.",
+        "details": "Gracefully handle exceptions during API calls. Implement retry mechanism for network-related issues.",
+        "testStrategy": "Simulate network failures, ensure retry mechanism works as expected.",
+        "priority": "medium",
+        "dependencies": [
+          1,
+          2
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Ensure Data Consistency in Database",
+        "description": "Maintain data consistency when clipboard history records are deleted.",
+        "details": "Implement cascading deletes to remove unused embeddings when clipboard history is pruned.",
+        "testStrategy": "Data integrity tests to ensure foreign keys are upheld and unnecessary data is removed.",
+        "priority": "medium",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Optimize Performance for Large Data Sets",
+        "description": "Ensure system can handle large volumes of clipboard history and embeddings.",
+        "details": "Optimize database queries and similarity calculations for performance.",
+        "testStrategy": "Load testing with large data sets to measure and improve performance.",
+        "priority": "low",
+        "dependencies": [
+          4,
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "User Documentation and Training",
+        "description": "Create comprehensive user guides and training materials for the new semantic search feature.",
+        "details": "Develop documentation and training modules to help users understand and utilize the semantic search feature effectively.",
+        "testStrategy": "Usability testing of documentation and training materials with a sample user group.",
+        "priority": "low",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-06-25T12:44:10.497Z",
+      "updated": "2025-06-25T12:44:10.497Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
