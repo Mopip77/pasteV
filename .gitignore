@@ -38,10 +38,6 @@ node_modules/
 *.sw?
 # OS specific
 
-# Task files
-# tasks.json
-# tasks/ 
-
 AGENTS.md
 
 .roo/
@@ -49,3 +45,7 @@ AGENTS.md
 .windsurf/
 .clinerules/
 .roomodes
+
+# Task files
+# tasks.json
+# tasks/ 
