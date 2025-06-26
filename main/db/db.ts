@@ -113,7 +113,7 @@ class DatabaseManager {
             VALUES (?, ?, ?, ?, ?, ?, ?)
           `);
 
-        insert.run(
+        const info = insert.run(
             entity.type,
             entity.text,
             entity.blob,
@@ -122,6 +122,7 @@ class DatabaseManager {
             entity.lastReadTime,
             entity.details
         );
+        entity.id = Number(info.lastInsertRowid);
     }
 
     public listClipboardHistory(query: ListClipboardHistoryQuery): ClipboardHisotryEntity[] {

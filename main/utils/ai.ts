@@ -131,6 +131,6 @@ export async function createTextEmbedding(text: string): Promise<number[]> {
         input: text,
     });
 
-    log.info(`[ai] embedding model=${response.model}, usage=${response.usage}`);
+    log.info(`[ai] embedding model=${response.model}, usage=${response.usage.total_tokens}`);
     return Promise.resolve(response.data[0].embedding);
 }
