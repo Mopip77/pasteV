@@ -72,17 +72,20 @@ async function aiTag(item: ClipboardHisotryEntity, img: PNG, ocrResult: string) 
 
             const ocrPrompt = `
             ## 目标
-            请用最多三个词来描述这张图片，这些词应该是有关这张图片的主题的。
+            请详细描述这张图片，并提供最多三个概括性的标签。
         
             ## 要求
-            - 以 json 格式输出一个字符串数组
-            - 最多输出三个词
-            - 三个词尽量不相关
-            - 如果输入内容过少，可以输出空数组
+            - 以 json 格式输出一个对象
+            - 对象应包含两个字段: "description" (字符串) 和 "tags" (字符串数组)
+            - "description" 应该详细描述图片的内容、场景、物体、人物、氛围等。
+            - "tags" 最多包含三个词，这些词应高度概括图片主题。
+            - 如果输入内容过少，"description" 可以为空字符串，"tags" 可以为空数组。
         
             ## 例子
-            1. {"tags": ["对话", "天气", "风景"]}
-            2. {"tags": []}
+            {
+              "description": "这是一张展示了两个人坐在咖啡馆里交谈的图片。窗外是雨天，街景模糊。桌上放着两杯咖啡和一台笔记本电脑。整体氛围看起来很舒适和放松。",
+              "tags": ["对话", "咖啡馆", "雨天"]
+            }
             `
 
             return chatComplectionWithImageJsonFormatted(ocrPrompt, compressedBuffer)
@@ -93,17 +96,20 @@ async function aiTag(item: ClipboardHisotryEntity, img: PNG, ocrResult: string) 
     这是一张图片通过 ocr 识别的文本，你可以猜测这是什么图片，或者这张图片的主题是什么？
     
     ## 目标
-    请用最多三个词来描述这张图片，这些词应该是有关这张图片的主题的。
+    请详细描述这张图片，并提供最多三个概括性的标签。
 
     ## 要求
-    - 以 json 格式输出一个字符串数组
-    - 最多输出三个词
-    - 三个词尽量不相关
-    - 如果输入内容过少，可以输出空数组
+    - 以 json 格式输出一个对象
+    - 对象应包含两个字段: "description" (字符串) 和 "tags" (字符串数组)
+    - "description" 应该详细描述图片的内容、场景、物体、人物、氛围等。
+    - "tags" 最多包含三个词，这些词应高度概括图片主题。
+    - 如果输入内容过少，"description" 可以为空字符串，"tags" 可以为空数组。
 
     ## 例子
-    1. {"tags": ["对话", "天气", "风景"]}
-    2. {"tags": []}
+    {
+        "description": "这是一张展示了两个人坐在咖啡馆里交谈的图片。窗外是雨天，街景模糊。桌上放着两杯咖啡和一台笔记本电脑。整体氛围看起来很舒适和放松。",
+        "tags": ["对话", "咖啡馆", "雨天"]
+    }
 
     以下是 ocr 识别的文本：
     ${ocrResult}
@@ -118,12 +124,22 @@ async function aiTag(item: ClipboardHisotryEntity, img: PNG, ocrResult: string) 
 
     const aiResponseJson = JSON.parse(aiResponse);
     log.debug("[post-handler] aiTag, aiResponseJson=", aiResponseJson)
-    if (aiResponseJson.tags) {
+    if (aiResponseJson.tags && aiResponseJson.tags.length > 0) {
         item.details = JSON.stringify({
             ...JSON.parse(item.details),
             tags: aiResponseJson.tags
         })
         singletons.db.updateClipboardHistoryDetails(item.hashKey, item.details)
         singletons.db.insertTagRelation(item.hashKey, aiResponseJson.tags)
+    }
+
+    if (aiResponseJson.description) {
+        createTextEmbedding(aiResponseJson.description).then(embedding => {
+            if (item.id) {
+                singletons.db.insertClipboardEmbedding(item.id, embedding, "text-embedding-3-small");
+            }
+        }).catch(err => {
+            log.error(`[post-handler] {${item.hashKey}} Error creating image embedding=${err}`);
+        });
     }
 }
