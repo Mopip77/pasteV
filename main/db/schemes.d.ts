@@ -32,8 +32,17 @@ interface ListClipboardHistoryQuery {
     tags?: string[]
 }
 
+interface ClipboardEmbeddingEntity {
+    id?: number
+    clipboard_history_id: number
+    embedding: Buffer
+    model: string
+    create_time: string
+}
+
 export type {
     ClipboardHisotryEntity,
     ListClipboardHistoryQuery,
-    ClipboardHistoryEntityDetail
+    ClipboardHistoryEntityDetail,
+    ClipboardEmbeddingEntity
 }

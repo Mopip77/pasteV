@@ -67,6 +67,20 @@ class DatabaseManager {
                 ALTER TABLE clipboard_history ADD COLUMN details TEXT DEFAULT '{}';
             `);
         }
+
+        // add embedding table
+        this.db.exec(`
+            CREATE TABLE IF NOT EXISTS clipboard_embeddings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                clipboard_history_id INTEGER NOT NULL,
+                embedding BLOB NOT NULL,
+                model TEXT NOT NULL,
+                create_time DATETIME NOT NULL,
+                FOREIGN KEY (clipboard_history_id) REFERENCES clipboard_history(id) ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_embedding_create_time ON clipboard_embeddings(create_time);
+        `)
     }
 
     public getClipboardHistory(hashKey: string): ClipboardHisotryEntity | undefined {
