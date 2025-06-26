@@ -1,0 +1,21 @@
+{
+	"meta": {
+		"generatedAt": "2025-06-26T04:54:48.156Z",
+		"tasksAnalyzed": 1,
+		"totalTasks": 10,
+		"analysisCount": 1,
+		"thresholdScore": 5,
+		"projectName": "pasteV",
+		"usedResearch": true
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 4,
+			"taskTitle": "Implement Semantic Search Logic",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down into subtasks covering embedding generation, cosine similarity implementation, result sorting, API integration, and testing.",
+			"reasoning": "Involves multiple technical components (embeddings, cosine similarity, result sorting) with dependencies and requires both unit and integration testing, making it moderately complex."
+		}
+	]
+}

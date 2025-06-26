@@ -47,7 +47,66 @@
           3
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Generate Text Embeddings",
+            "description": "Implement functionality to generate text embeddings using a pre-trained model",
+            "dependencies": [],
+            "details": "Select appropriate embedding model, preprocess input text, and generate fixed-dimensional vector representations",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Cosine Similarity Calculation",
+            "description": "Develop function to compute cosine similarity between embedding vectors",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement mathematical formula for cosine similarity, validate with sample embedding pairs",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Result Sorting",
+            "description": "Create functionality to sort items by cosine similarity scores",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement descending sort based on similarity scores, handle edge cases with equal scores",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "API Integration",
+            "description": "Integrate embedding and similarity features into API endpoints",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Design request/response schemas, implement endpoint handlers, and ensure proper error handling",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Testing Implementation",
+            "description": "Develop unit and integration tests for all components",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "details": "Create unit tests for embedding generation, similarity calculation, and sorting; implement integration tests for API endpoints",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 5,
