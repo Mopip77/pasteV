@@ -258,6 +258,15 @@ class DatabaseManager {
         return this.db.prepare(sql).all([`%${filter}%`]).map(row => row.tag);
     }
 
+    public insertClipboardEmbedding(clipboardHistoryId: number, embedding: number[], model: string) {
+        const insert = this.db.prepare(`
+            INSERT INTO clipboard_embeddings (clipboard_history_id, embedding, model, create_time)
+            VALUES (?, ?, ?, ?)
+        `);
+        const embeddingBuffer = Buffer.from(new Float32Array(embedding).buffer);
+        insert.run(clipboardHistoryId, embeddingBuffer, model, new Date().toISOString());
+    }
+
 }
 
 export default DatabaseManager

@@ -71,7 +71,7 @@ export async function chatComplectionWithImage(prompt: string, image: Buffer): P
                     {
                         type: "image_url",
                         image_url: {
-                            url: `data:image/png;base64,${Buffer.from(image).toString("base64")}`,
+                            url: `data:image/png;base64,${image.toString("base64")}`,
                         }
                     },
                 ],
@@ -102,7 +102,7 @@ export async function chatComplectionWithImageJsonFormatted(prompt: string, imag
                     {
                         type: "image_url",
                         image_url: {
-                            url: `data:image/png;base64,${Buffer.from(image).toString("base64")}`,
+                            url: `data:image/png;base64,${image.toString("base64")}`,
                         }
                     },
                 ],
@@ -118,4 +118,19 @@ export async function chatComplectionWithImageJsonFormatted(prompt: string, imag
     return new Promise((resolve, reject) => {
         resolve(response.choices[0].message.content);
     });
+}
+
+export async function createTextEmbedding(text: string): Promise<number[]> {
+    const client = generateClient();
+    if (!client) {
+        return Promise.reject("OpenAI client not configured");
+    }
+
+    const response = await client.embeddings.create({
+        model: "text-embedding-3-small",
+        input: text,
+    });
+
+    log.info(`[ai] embedding model=${response.model}, usage=${response.usage}`);
+    return Promise.resolve(response.data[0].embedding);
 }

@@ -2,7 +2,7 @@ import { ClipboardHisotryEntity } from "main/db/schemes";
 import { ocr } from "./ocr";
 import log from "electron-log/main";
 import { compressionPicture, readPngMetadata } from "../utils/image";
-import { chatComplectionJsonFormatted, chatComplectionWithImageJsonFormatted } from "main/utils/ai";
+import { chatComplectionJsonFormatted, chatComplectionWithImageJsonFormatted, createTextEmbedding } from "main/utils/ai";
 import { PNG } from "pngjs";
 import { singletons } from "main/components/singletons";
 
@@ -38,6 +38,13 @@ export async function postHandleClipboardContent(item: ClipboardHisotryEntity) {
             wordCount: item.text.split(/\s+/).length
         })
         singletons.db.updateClipboardHistoryDetails(item.hashKey, item.details)
+        createTextEmbedding(item.text).then(embedding => {
+            if (item.id) {
+                singletons.db.insertClipboardEmbedding(item.id, embedding, "text-embedding-3-small");
+            }
+        }).catch(err => {
+            log.error(`[post-handler] {${item.hashKey}} Error creating text embedding=${err}`);
+        });
     }
 }
 
