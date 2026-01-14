@@ -7,5 +7,8 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
+| #222 | 12:09 PM | 🔄 | Changed query method return type from ClipboardHisotryEntity to ClipboardHistoryMeta | ~304 |
+| #221 | " | 🔄 | Updated clipboardMemoCache imports to include ClipboardHistoryMeta type | ~250 |
+| #214 | 12:05 PM | 🔵 | ClipboardMemoCache maintains in-memory LRU cache of 100 most recent clipboard entries | ~374 |
 | #128 | 9:56 AM | 🟣 | Created comprehensive CLAUDE.md documentation | ~457 |
 </claude-mem-context>

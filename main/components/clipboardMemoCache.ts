@@ -1,4 +1,4 @@
-import { ClipboardHisotryEntity, ListClipboardHistoryQuery } from "../db/schemes";
+import { ClipboardHisotryEntity, ClipboardHistoryMeta, ListClipboardHistoryQuery } from "../db/schemes";
 import { LinkedDictionary } from 'typescript-collections';
 import { postHandleClipboardContent } from "main/helpers/clipboard-content-post-handler";
 import { singletons } from "./singletons";
@@ -47,7 +47,7 @@ class ClipboardMemoCache {
         this.last = data
     }
 
-    public query(queryBody: ListClipboardHistoryQuery): ClipboardHisotryEntity[] {
+    public query(queryBody: ListClipboardHistoryQuery): ClipboardHistoryMeta[] {
         if (queryBody.regex) {
             // 检查正则表达式是否合法
             try {

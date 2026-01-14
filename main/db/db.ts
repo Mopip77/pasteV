@@ -1,8 +1,11 @@
 import { join } from 'node:path'
 import { app } from "electron";
 import Database from 'better-sqlite3/lib/database';
-import { ClipboardHisotryEntity, ListClipboardHistoryQuery } from './schemes';
+import { ClipboardHisotryEntity, ClipboardHistoryMeta, ListClipboardHistoryQuery } from './schemes';
 import log from 'electron-log/main';
+
+// 文本截断阈值：超过此长度的文本在列表中只返回前 N 个字符
+const TEXT_TRUNCATE_THRESHOLD = 10000;
 
 class DatabaseManager {
 
@@ -43,7 +46,13 @@ class DatabaseManager {
 
             CREATE UNIQUE INDEX IF NOT EXISTS uidx_hash_key ON clipboard_history(hash_key);
             CREATE INDEX IF NOT EXISTS idx_last_read_time ON clipboard_history(last_read_time);
-            CREATE INDEX IF NOT EXISTS idx_type_text ON clipboard_history(type, text);
+        `)
+
+        // 添加覆盖索引：type + last_read_time DESC（用于按类型筛选时的排序优化）
+        // 移除旧的 idx_type_text 索引（包含 text 列，体积大且对 LIKE 无效）
+        this.db.exec(`
+            DROP INDEX IF EXISTS idx_type_text;
+            CREATE INDEX IF NOT EXISTS idx_type_last_read ON clipboard_history(type, last_read_time DESC);
         `)
 
         // add tag table
@@ -110,55 +119,91 @@ class DatabaseManager {
         );
     }
 
-    public listClipboardHistory(query: ListClipboardHistoryQuery): ClipboardHisotryEntity[] {
+    public listClipboardHistory(query: ListClipboardHistoryQuery): ClipboardHistoryMeta[] {
         const queryParams = []
-        let keywordFilterClause = ''
+        let whereClause = 'WHERE 1 = 1'
+
+        // 游标分页：基于 last_read_time
+        if (query.cursor) {
+            queryParams.push(query.cursor)
+            whereClause += ' AND last_read_time < ?'
+        }
 
         if (query.keyword) {
             queryParams.push(query.keyword)
-            keywordFilterClause = query.regex ? "AND (text REGEXP ?)" : "AND (text LIKE CONCAT('%', ?, '%'))"
+            whereClause += query.regex ? " AND (text REGEXP ?)" : " AND (text LIKE '%' || ? || '%')"
         }
 
         if (query.type) {
             queryParams.push(query.type)
-            keywordFilterClause += "AND (type = ?)"
+            whereClause += " AND (type = ?)"
         }
 
         if (query.tags && query.tags.length > 0) {
             const placeholders = query.tags.map(() => '?').join(',');
-            keywordFilterClause += `
+            whereClause += `
                 AND hash_key IN (
-                    SELECT clipboard_history_hash_key 
-                    FROM tag_relation 
+                    SELECT clipboard_history_hash_key
+                    FROM tag_relation
                     WHERE name IN (${placeholders})
-                    GROUP BY clipboard_history_hash_key 
+                    GROUP BY clipboard_history_hash_key
                     HAVING COUNT(DISTINCT name) = ${query.tags.length}
                 )
             `;
             queryParams.push(...query.tags);
         }
 
-        const querySql = this.db.prepare(`
-            SELECT id, type, text, blob, hash_key, create_time, last_read_time, details
-            FROM clipboard_history
-            WHERE 1 = 1 ${keywordFilterClause}
-            ORDER BY last_read_time DESC
-            LIMIT ?, ?
-        `);
-        
-        queryParams.push(query.offset || 0)
         queryParams.push(query.size)
+
+        // 不返回 blob，使用 SUBSTR 截断大文本
+        const querySql = this.db.prepare(`
+            SELECT
+                id,
+                type,
+                CASE
+                    WHEN LENGTH(text) > ${TEXT_TRUNCATE_THRESHOLD}
+                    THEN SUBSTR(text, 1, ${TEXT_TRUNCATE_THRESHOLD})
+                    ELSE text
+                END as text,
+                LENGTH(text) > ${TEXT_TRUNCATE_THRESHOLD} as text_truncated,
+                hash_key,
+                create_time,
+                last_read_time,
+                details
+            FROM clipboard_history
+            ${whereClause}
+            ORDER BY last_read_time DESC
+            LIMIT ?
+        `);
 
         return querySql.all(queryParams).map(row => ({
             id: row.id,
             type: row.type,
             text: row.text,
-            blob: row.blob,
+            textTruncated: !!row.text_truncated,
             hashKey: row.hash_key,
             createTime: row.create_time,
             lastReadTime: row.last_read_time,
             details: row.details,
         }))
+    }
+
+    // 获取图片 blob（用于粘贴图片时）
+    public getClipboardBlob(hashKey: string): Buffer | null {
+        const sql = this.db.prepare(`
+            SELECT blob FROM clipboard_history WHERE hash_key = ?
+        `);
+        const row = sql.get(hashKey);
+        return row ? row.blob : null;
+    }
+
+    // 获取完整文本（用于查看被截断的大文本）
+    public getFullText(hashKey: string): string | null {
+        const sql = this.db.prepare(`
+            SELECT text FROM clipboard_history WHERE hash_key = ?
+        `);
+        const row = sql.get(hashKey);
+        return row ? row.text : null;
     }
 
     public updateClipboardHistoryLastReadTime(hashKey: string, lastReadTime: string) {

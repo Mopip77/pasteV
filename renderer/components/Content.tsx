@@ -1,6 +1,6 @@
 "use client";
 import {
-  ClipboardHisotryEntity,
+  ClipboardHistoryMeta,
   ClipboardHistoryEntityDetail,
 } from "@/../main/db/schemes";
 import hljs from "highlight.js";
@@ -48,7 +48,7 @@ const Content = () => {
   const { searchBody, setSearchBody } = useContext(SearchBodyContext);
   const { setCurrentItems, setSelectedIndex: setStatsSelectedIndex } = useContext(StatsContext);
 
-  const [histories, setHistories] = useState<ClipboardHisotryEntity[]>([]);
+  const [histories, setHistories] = useState<ClipboardHistoryMeta[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [mouseUpIndex, setMouseIndex] = useState<number>(-1);
   const [hidePointer, setHidePointer] = useState<boolean>(false);
@@ -64,12 +64,14 @@ const Content = () => {
   const [showOcrResult, setShowOcrResult] = useState<boolean>(false);
   const listRefs = useRef<(HTMLLIElement | null)[]>([]);
   const [detailsFC, setDetailsFC] = useState(null);
+  // 当前选中图片的 blob（懒加载）
+  const [currentBlob, setCurrentBlob] = useState<Buffer | null>(null);
 
   const batchSize = 40;
 
   const fetchHistory = async ({
     keyword = "",
-    offset = 0,
+    cursor = "",
     size = batchSize,
     regex = false,
     type = "",
@@ -78,8 +80,8 @@ const Content = () => {
     log.debug(
       "fetchHistory, keyword=",
       keyword,
-      "offset=",
-      offset,
+      "cursor=",
+      cursor,
       "size=",
       size,
       "regex=",
@@ -93,7 +95,7 @@ const Content = () => {
       keyword,
       regex,
       type,
-      offset,
+      cursor,
       size,
       tags,
     });
@@ -117,9 +119,10 @@ const Content = () => {
     setMouseIndex(-1);
     setHidePointer(false);
     setNoMoreHistory(false);
+    setCurrentBlob(null);
     const results = await fetchHistory({
       keyword: searchBody.keyword,
-      offset: 0,
+      cursor: "",
       size: batchSize,
       regex: searchBody.regex,
       type: searchBody.type,
@@ -229,7 +232,7 @@ const Content = () => {
   }, [selectedIndex]);
 
   const debouncedHighlightFunc = useCallback(
-    debounce(async (item: ClipboardHisotryEntity, abortController: AbortController) => {
+    debounce(async (item: ClipboardHistoryMeta, abortController: AbortController) => {
       try {
         setHighlightInfo(undefined);
         const result = await asyncGenerateHighlightInfo(item);
@@ -247,12 +250,13 @@ const Content = () => {
   );
 
   const showContent = (
-    histories: ClipboardHisotryEntity[],
+    histories: ClipboardHistoryMeta[],
     selectedIndex: number,
     showHighlight: boolean,
     showOcrResult: boolean,
     highlightInfo: HighlightResult | undefined,
-    searchBody: SearchBody
+    searchBody: SearchBody,
+    imageBlob: Buffer | null
   ) => {
     log.log("re render showContent", selectedIndex, showHighlight);
     if (selectedIndex >= 0) {
@@ -284,22 +288,23 @@ const Content = () => {
           </pre>
         );
       }
-      return renderContent(histories[selectedIndex], searchBody);
+      return renderContent(histories[selectedIndex], searchBody, imageBlob);
     }
   };
 
   // 1. 创建一个 debounced 函数
   const debouncedSetContentFC = useCallback(
     debounce((
-      histories: ClipboardHisotryEntity[],
+      histories: ClipboardHistoryMeta[],
       selectedIndex: number,
       showHighlight: boolean,
       showOcrResult: boolean,
       highlightInfo: HighlightResult | undefined,
-      searchBody: SearchBody
+      searchBody: SearchBody,
+      imageBlob: Buffer | null
     ) => {
       setContentFC(null);
-      const content = showContent(histories, selectedIndex, showHighlight, showOcrResult, highlightInfo, searchBody);
+      const content = showContent(histories, selectedIndex, showHighlight, showOcrResult, highlightInfo, searchBody, imageBlob);
       setContentFC(content);
     }, 100),
     [] // 空依赖数组，确保 debounced 函数只创建一次
@@ -307,7 +312,7 @@ const Content = () => {
 
   // 2. 在 useEffect 中调用这个 debounced 函数
   useEffect(() => {
-    debouncedSetContentFC(histories, selectedIndex, showHighlight, showOcrResult, highlightInfo, searchBody);
+    debouncedSetContentFC(histories, selectedIndex, showHighlight, showOcrResult, highlightInfo, searchBody, currentBlob);
   }, [
     histories,
     selectedIndex,
@@ -315,6 +320,7 @@ const Content = () => {
     showOcrResult,
     highlightInfo,
     searchBody,
+    currentBlob,
     debouncedSetContentFC,
   ]);
 
@@ -341,7 +347,19 @@ const Content = () => {
     setShowHighlight(false);
     setShowOcrResult(false);
     setHighlightInfo(undefined);
+    setCurrentBlob(null);  // 清除旧的 blob
   };
+
+  // 懒加载图片 blob
+  useEffect(() => {
+    const loadBlob = async () => {
+      if (selectedIndex >= 0 && histories[selectedIndex]?.type === "image") {
+        const blob = await window.ipc.invoke("clipboard:getBlob", histories[selectedIndex].hashKey);
+        setCurrentBlob(blob);
+      }
+    };
+    loadBlob();
+  }, [selectedIndex, histories]);
 
   const loadMoreItems = async (startIndex: number, stopIndex: number) => {
     log.debug(
@@ -351,28 +369,31 @@ const Content = () => {
       stopIndex
     );
     if (stopIndex >= histories.length - 1) {
+      // 使用游标分页：取最后一条的 lastReadTime 作为游标
+      const lastItem = histories[histories.length - 1];
+      const cursor = lastItem?.lastReadTime || "";
       const moreHistories = await fetchHistory({
         keyword: searchBody.keyword,
-        offset: histories.length,
+        cursor,
         size: batchSize,
         regex: searchBody.regex,
         type: searchBody.type,
         tags: searchBody.tags,
       });
-      histories.push(...moreHistories);
+      setHistories(prev => [...prev, ...moreHistories]);
     }
   };
 
-  const reCopy = async (item: ClipboardHisotryEntity) => {
+  const reCopy = async (item: ClipboardHistoryMeta) => {
     window.ipc.send("app:hide", "");
-    window.ipc.invoke("clipboard:add", item, true);
+    window.ipc.invoke("clipboard:add", item.hashKey, true);
     setSearchBody((prev) => ({
       ...prev,
       keyword: "",
     }));
   };
 
-  const generateSummary = (item: ClipboardHisotryEntity) => {
+  const generateSummary = (item: ClipboardHistoryMeta) => {
     let icon;
     let summary = "";
     if (item.type === "image") {
@@ -410,7 +431,7 @@ const Content = () => {
     );
   };
 
-  const generateTags = (item: ClipboardHisotryEntity) => {
+  const generateTags = (item: ClipboardHistoryMeta) => {
     return JSON.parse(item.details).tags?.map((tag, index) => (
       <TooltipProvider>
         <Tooltip delayDuration={100}>
@@ -431,15 +452,19 @@ const Content = () => {
   };
 
   const renderContent = (
-    item: ClipboardHisotryEntity,
-    searchBody: SearchBody
+    item: ClipboardHistoryMeta,
+    searchBody: SearchBody,
+    imageBlob: Buffer | null
   ) => {
     if (!item) {
       return <></>;
     }
 
-    if (item.type === "image" && item.blob) {
-      const base64String = Buffer.from(new Uint8Array(item.blob)).toString(
+    if (item.type === "image") {
+      if (!imageBlob) {
+        return <div className="flex items-center justify-center h-full text-gray-500">Loading image...</div>;
+      }
+      const base64String = Buffer.from(new Uint8Array(imageBlob)).toString(
         "base64"
       );
       return (
@@ -479,7 +504,7 @@ const Content = () => {
   };
 
   const asyncGenerateHighlightInfo = async (
-    item: ClipboardHisotryEntity
+    item: ClipboardHistoryMeta
   ): Promise<HighlightResult> => {
     if (item.type !== "text") {
       return undefined;
@@ -500,7 +525,7 @@ const Content = () => {
   };
 
   const generateDetails = (
-    item: ClipboardHisotryEntity
+    item: ClipboardHistoryMeta
   ): { label: string; value: string }[] => {
     const details = [
       {
@@ -568,8 +593,11 @@ const Content = () => {
   };
 
   const handleSaveImage = () => {
-    const imageBuffer = histories[selectedIndex].blob;
-    const blob = new Blob([imageBuffer], { type: "image/png" });
+    if (!currentBlob) {
+      log.warn("No blob available to save");
+      return;
+    }
+    const blob = new Blob([currentBlob], { type: "image/png" });
     const url = URL.createObjectURL(blob);
 
     const details: ClipboardHistoryEntityDetail = JSON.parse(
@@ -677,7 +705,7 @@ const Content = () => {
   }, [selectedIndex, highlightInfo]);
 
   const debouncedSetDetailsFC = useCallback(
-    debounce((clipBoardItem: ClipboardHisotryEntity) => {
+    debounce((clipBoardItem: ClipboardHistoryMeta) => {
       setDetailsFC(null);
       if (clipBoardItem) {
         setDetailsFC(

@@ -1,5 +1,5 @@
 import { app, Event } from "electron"
-import { ClipboardHisotryEntity, ListClipboardHistoryQuery } from "main/db/schemes"
+import { ListClipboardHistoryQuery } from "main/db/schemes"
 import { writeClipboard } from "main/utils/clipboard"
 import { exec } from "child_process"
 import log from "electron-log/main"
@@ -20,8 +20,13 @@ export const registerHandlers = (ipcMain) => {
     })
     // clipboard query
     ipcMain.handle('clipboard:query', (event: Event, query: ListClipboardHistoryQuery) => singletons.cache.query(query))
-    // clipboard insert
-    ipcMain.handle('clipboard:add', (event: Event, entity: ClipboardHisotryEntity, paste: boolean) => {
+    // clipboard add - 接收 hashKey，从数据库获取完整数据后写入剪贴板
+    ipcMain.handle('clipboard:add', (event: Event, hashKey: string, paste: boolean) => {
+        const entity = singletons.db.getClipboardHistory(hashKey);
+        if (!entity) {
+            log.error(`clipboard:add - entity not found for hashKey: ${hashKey}`);
+            return;
+        }
         writeClipboard({ type: entity.type, text: entity.text, blob: entity.blob })
         if (paste) {
             setTimeout(() => {
@@ -33,6 +38,14 @@ export const registerHandlers = (ipcMain) => {
                 });
             }, CLIPBOARD_PASTE_DELAY);
         }
+    })
+    // clipboard:getBlob - 获取图片 blob
+    ipcMain.handle('clipboard:getBlob', (event: Event, hashKey: string) => {
+        return singletons.db.getClipboardBlob(hashKey);
+    })
+    // clipboard:getFullText - 获取完整文本
+    ipcMain.handle('clipboard:getFullText', (event: Event, hashKey: string) => {
+        return singletons.db.getFullText(hashKey);
     })
     // system
     ipcMain.on('system:openUrl', (event: Event, url: string) => { exec(`open ${url}`) })

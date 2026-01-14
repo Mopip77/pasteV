@@ -7,5 +7,17 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
+| #234 | 12:15 PM | 🟣 | Blob lazy loading implementation completed with useEffect and error handling | ~360 |
+| #233 | 12:14 PM | 🟣 | Implemented lazy blob loading via IPC when image clipboard entries selected | ~359 |
+| #232 | 12:13 PM | 🟣 | Implemented blob lazy loading with currentBlob state and imageBlob parameter threading | ~356 |
+| #231 | " | 🟣 | Image rendering now uses lazy-loaded blob with loading state | ~344 |
+| #230 | " | 🟣 | Implemented cursor-based pagination replacing offset pagination | ~147 |
+| #229 | 12:12 PM | 🔄 | Pagination changed from offset-based to cursor-based with lazy blob loading | ~323 |
+| #228 | " | 🟣 | Added cursor-based pagination to frontend fetchHistory with blob lazy-loading state | ~328 |
+| #227 | 12:11 PM | 🔄 | reCopy function now passes hash_key instead of full entity object | ~285 |
+| #226 | 12:10 PM | 🔄 | Frontend histories state changed to use ClipboardHistoryMeta type | ~286 |
+| #225 | " | 🔄 | Updated Content component to use ClipboardHistoryMeta instead of full entities | ~308 |
+| #224 | " | 🔵 | Frontend component uses blob data for image rendering and save operations | ~408 |
+| #207 | 12:00 PM | 🔵 | Frontend fetches clipboard history in batches of 40 items with infinite scroll | ~336 |
 | #128 | 9:56 AM | 🟣 | Created comprehensive CLAUDE.md documentation | ~457 |
 </claude-mem-context>

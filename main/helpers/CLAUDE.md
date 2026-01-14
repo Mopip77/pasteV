@@ -7,5 +7,8 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
+| #223 | 12:09 PM | 🔄 | Refactored clipboard IPC handlers to use lazy loading with hashKey lookup | ~391 |
+| #211 | 12:04 PM | 🔵 | clipboard:add IPC handler requires full entity with blob data for paste operations | ~333 |
+| #210 | " | 🔵 | IPC handlers route clipboard queries through cache layer and paste operations use full entity | ~355 |
 | #128 | 9:56 AM | 🟣 | Created comprehensive CLAUDE.md documentation | ~457 |
 </claude-mem-context>
