@@ -16,4 +16,6 @@ dist
 
 .cursor/
 
-CLAUDE.md
+.env
+mcp.json
+
