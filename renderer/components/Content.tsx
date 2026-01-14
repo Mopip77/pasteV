@@ -31,7 +31,7 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
-import { SearchBodyContext } from "./ClipboardHistory";
+import { SearchBodyContext, StatsContext } from "./ClipboardHistory";
 import { debounce, throttle } from "@/lib/utils";
 import AutoSizer from "react-virtualized-auto-sizer";
 import { FixedSizeList } from "react-window";
@@ -46,6 +46,7 @@ interface HighlightResult {
 
 const Content = () => {
   const { searchBody, setSearchBody } = useContext(SearchBodyContext);
+  const { setCurrentItems, setSelectedIndex: setStatsSelectedIndex } = useContext(StatsContext);
 
   const [histories, setHistories] = useState<ClipboardHisotryEntity[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
@@ -139,6 +140,16 @@ const Content = () => {
   useEffect(() => {
     initComponent();
   }, [searchBody]);
+
+  // Update stats when histories change
+  useEffect(() => {
+    setCurrentItems(histories.length);
+  }, [histories.length, setCurrentItems]);
+
+  // Update stats when selectedIndex changes
+  useEffect(() => {
+    setStatsSelectedIndex(selectedIndex);
+  }, [selectedIndex, setStatsSelectedIndex]);
 
   // navigation keyboard event
   const handleKeyDown = useCallback(
