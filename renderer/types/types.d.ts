@@ -2,7 +2,6 @@ export interface SearchBody {
     keyword: string
     regex: boolean
     type: string
-    tags: string[]
     // 是否使用语义搜索
     semantic: boolean
 }

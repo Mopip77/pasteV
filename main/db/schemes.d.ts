@@ -40,7 +40,6 @@ interface ListClipboardHistoryQuery {
     regex?: boolean
     type?: string
     size: number
-    tags?: string[]
     // 游标分页：上一页最后一条的 lastReadTime
     cursor?: string
 }

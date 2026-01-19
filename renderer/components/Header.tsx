@@ -19,7 +19,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
-import { MultiSelect } from "./ui/multi-select";
 import { useSelector } from "react-redux";
 import { RootState } from "@/stores/store";
 
@@ -27,8 +26,6 @@ const Header = () => {
   const { searchBody, setSearchBody } = useContext(SearchBodyContext);
   const [inputValue, setInputValue] = useState(searchBody.keyword);
   let compositionStart = useRef(false);
-  const [tagOptions, setTagOptions] = useState<string[]>([]);
-  const multiSelectRef = useRef<HTMLDivElement>(null);
   const appConfig = useSelector((state: RootState) => state.appSettingConfig);
 
   // 记住语义搜索前的类型，用于切换回普通模式时恢复
@@ -125,14 +122,7 @@ const Header = () => {
     };
   }, []);
 
-  const fetchTags = async (filter: string = "") => {
-    const tags = await window.ipc.invoke("tags:query", filter);
-    setTagOptions(tags);
-  };
 
-  useEffect(() => {
-    fetchTags();
-  }, []);
 
   return (
     <div className="fixed w-full flex items-center h-12 pr-2">
@@ -242,22 +232,7 @@ const Header = () => {
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        <div className="relative">
-          <MultiSelect
-            className="min-w-[20px] max-w-[600px]"
-            ref={multiSelectRef}
-            value={searchBody.tags}
-            onChange={(tags) => {
-              setSearchBody((prev) => ({
-                ...prev,
-                tags,
-              }));
-            }}
-            onInputChange={fetchTags}
-            options={tagOptions}
-            placeholder="tags..."
-          />
-        </div>
+
         <Select
           value={searchBody.type}
           onValueChange={(value) => {

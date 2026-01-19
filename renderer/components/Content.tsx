@@ -79,10 +79,9 @@ const Content = () => {
     size = batchSize,
     regex = false,
     type = "",
-    tags = [],
     semantic = false,
   } = {}) => {
-    log.debug("fetchHistory", { keyword, cursor, size, regex, type, tags, semantic });
+    log.debug("fetchHistory", { keyword, cursor, size, regex, type, semantic });
 
     // If semantic search, call different IPC
     if (semantic) {
@@ -109,7 +108,6 @@ const Content = () => {
       type,
       cursor,
       size,
-      tags,
     });
 
     if (result.length !== size) {
@@ -138,7 +136,6 @@ const Content = () => {
       size: batchSize,
       regex: searchBody.regex,
       type: searchBody.type,
-      tags: searchBody.tags,
       semantic: searchBody.semantic,
     });
     setHistories(results);
@@ -391,7 +388,6 @@ const Content = () => {
         size: batchSize,
         regex: searchBody.regex,
         type: searchBody.type,
-        tags: searchBody.tags,
       });
       setHistories(prev => [...prev, ...moreHistories]);
     }

@@ -182,20 +182,6 @@ class DatabaseManager {
             whereClause += " AND (type = ?)"
         }
 
-        if (query.tags && query.tags.length > 0) {
-            const placeholders = query.tags.map(() => '?').join(',');
-            whereClause += `
-                AND hash_key IN (
-                    SELECT clipboard_history_hash_key
-                    FROM tag_relation
-                    WHERE name IN (${placeholders})
-                    GROUP BY clipboard_history_hash_key
-                    HAVING COUNT(DISTINCT name) = ${query.tags.length}
-                )
-            `;
-            queryParams.push(...query.tags);
-        }
-
         queryParams.push(query.size)
 
         // 不返回 blob，使用 SUBSTR 截断大文本
@@ -321,16 +307,7 @@ class DatabaseManager {
         return info.changes;
     }
 
-    public queryTags(filter: string = ""): string[] {
-        const sql = `
-        SELECT DISTINCT name as tag
-        FROM tag_relation
-        WHERE name LIKE ?
-        ORDER BY name
-        `;
 
-        return this.db.prepare(sql).all([`%${filter}%`]).map(row => row.tag);
-    }
 
     // Update embedding for a clipboard item
     public updateClipboardHistoryEmbedding(hashKey: string, embedding: number[]) {

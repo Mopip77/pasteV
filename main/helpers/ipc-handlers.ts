@@ -61,9 +61,6 @@ export const registerHandlers = (ipcMain) => {
         );
     })
 
-    // tags query
-    ipcMain.handle('tags:query', (event: Event, filter: string) => singletons.db.queryTags(filter))
-
     // Semantic search for clipboard
     ipcMain.handle('clipboard:semanticSearch',
         async (event: Event, query: string, threshold: number, limit: number) => {
