@@ -3,6 +3,8 @@ export interface SearchBody {
     regex: boolean
     type: string
     tags: string[]
+    // 是否使用语义搜索
+    semantic: boolean
 }
 
 interface OpenaiConfig {
@@ -21,6 +23,10 @@ interface AppSettingConfig {
     // ai 打标签通过图片还是 ocr 文本
     imageInputType: 'text' | 'image';
     openaiConfig: OpenaiConfig;
+    // 语义搜索开关
+    semanticSearchEnable: boolean;
+    // 语义搜索相似度阈值
+    semanticSearchThreshold: number;
 }
 
 export type {

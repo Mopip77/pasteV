@@ -37,6 +37,8 @@ import AutoSizer from "react-virtualized-auto-sizer";
 import { FixedSizeList } from "react-window";
 import InfiniteLoader from "react-window-infinite-loader";
 import { SearchBody } from "@/types/types";
+import { useSelector } from "react-redux";
+import { RootState } from "@/stores/store";
 
 interface HighlightResult {
   error?: Error;
@@ -47,12 +49,14 @@ interface HighlightResult {
 const Content = () => {
   const { searchBody, setSearchBody } = useContext(SearchBodyContext);
   const { setCurrentItems, setSelectedIndex: setStatsSelectedIndex } = useContext(StatsContext);
+  const appConfig = useSelector((state: RootState) => state.appSettingConfig);
 
   const [histories, setHistories] = useState<ClipboardHistoryMeta[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [mouseUpIndex, setMouseIndex] = useState<number>(-1);
   const [hidePointer, setHidePointer] = useState<boolean>(false);
   const [noMoreHistory, setNoMoreHistory] = useState<boolean>(false);
+  const [isSemanticSearching, setIsSemanticSearching] = useState<boolean>(false);
   const [highlightInfo, setHighlightInfo] =
     useState<HighlightResult>(undefined);
   const highlightGereratorAbortController = useRef<AbortController | null>(
@@ -76,21 +80,29 @@ const Content = () => {
     regex = false,
     type = "",
     tags = [],
+    semantic = false,
   } = {}) => {
-    log.debug(
-      "fetchHistory, keyword=",
-      keyword,
-      "cursor=",
-      cursor,
-      "size=",
-      size,
-      "regex=",
-      regex,
-      "type=",
-      type,
-      "tags=",
-      tags
-    );
+    log.debug("fetchHistory", { keyword, cursor, size, regex, type, tags, semantic });
+
+    // If semantic search, call different IPC
+    if (semantic) {
+      setIsSemanticSearching(true);
+      try {
+        const threshold = appConfig.semanticSearchThreshold || 0.76;
+        const result = await global.window.ipc.invoke(
+          "clipboard:semanticSearch",
+          keyword,
+          threshold,
+          size
+        );
+        setNoMoreHistory(true); // Semantic search doesn't support pagination
+        return result;
+      } finally {
+        setIsSemanticSearching(false);
+      }
+    }
+
+    // Normal keyword search
     const result = await global.window.ipc.invoke("clipboard:query", {
       keyword,
       regex,
@@ -127,6 +139,7 @@ const Content = () => {
       regex: searchBody.regex,
       type: searchBody.type,
       tags: searchBody.tags,
+      semantic: searchBody.semantic,
     });
     setHistories(results);
     if (results.length > 0) {
@@ -734,56 +747,70 @@ const Content = () => {
     <>
       <div className="flex h-full divide-x divide-gray-200">
         <div className="w-2/5">
-          <AutoSizer>
-            {({ width, height }) => (
-              <InfiniteLoader
-                isItemLoaded={(index) =>
-                  noMoreHistory || index < histories.length - 1
-                }
-                itemCount={histories.length}
-                loadMoreItems={loadMoreItems}
-              >
-                {({ onItemsRendered, ref }) => (
-                  <FixedSizeList
-                    width={width}
-                    height={height}
-                    itemSize={40}
-                    itemCount={histories.length}
-                    onItemsRendered={onItemsRendered}
-                    ref={ref}
-                    className="scrollbar-none"
-                  >
-                    {({ index, style }) => (
-                      <li
-                        key={index}
-                        ref={(el) => {
-                          listRefs.current[index] = el;
-                        }}
-                        className={`flex items-center px-2 rounded-lg ${
-                          index === mouseUpIndex ? "bg-blue-200" : ""
-                        } ${index === selectedIndex ? "bg-blue-400" : ""}`}
-                        onMouseOver={() => {
-                          hidePointer || setMouseIndex(index);
-                        }}
-                        onMouseOut={() => {
-                          setMouseIndex(-1);
-                        }}
-                        onClick={() => {
-                          handleSelectionChange(index);
-                        }}
-                        onDoubleClick={() => {
-                          reCopy(histories[index]);
-                        }}
-                        style={style}
-                      >
-                        <div className="w-full flex items-center">
-                          {index < 5 && showQuickSelect && (
-                            <div className="absolute w-10 left-0 flex items-center justify-center py-2.5 pl-3 pr-5 text-white bg-[#3f4756ee] rounded-r-full text-sm animate-in slide-in-from-left duration-100">
-                              {`⌘+${index + 1}`}
-                            </div>
-                          )}
-                          {generateSummary(histories[index])}
-                        </div>
+          {/* Semantic search loading indicator */}
+          {isSemanticSearching && histories.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full text-gray-500">
+              <div className="relative w-16 h-16 mb-4">
+                <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
+                <div className="absolute inset-0 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+              <p className="text-sm">正在进行语义搜索...</p>
+              <p className="text-xs text-gray-400 mt-1">AI 正在理解您的查询</p>
+            </div>
+          )}
+
+          {/* Normal list view */}
+          {!isSemanticSearching || histories.length > 0 ? (
+            <AutoSizer>
+              {({ width, height }) => (
+                <InfiniteLoader
+                  isItemLoaded={(index) =>
+                    noMoreHistory || index < histories.length - 1
+                  }
+                  itemCount={histories.length}
+                  loadMoreItems={loadMoreItems}
+                >
+                  {({ onItemsRendered, ref }) => (
+                    <FixedSizeList
+                      width={width}
+                      height={height}
+                      itemSize={40}
+                      itemCount={histories.length}
+                      onItemsRendered={onItemsRendered}
+                      ref={ref}
+                      className="scrollbar-none"
+                    >
+                      {({ index, style }) => (
+                        <li
+                          key={index}
+                          ref={(el) => {
+                            listRefs.current[index] = el;
+                          }}
+                          className={`flex items-center px-2 rounded-lg ${
+                            index === mouseUpIndex ? "bg-blue-200" : ""
+                          } ${index === selectedIndex ? "bg-blue-400" : ""}`}
+                          onMouseOver={() => {
+                            hidePointer || setMouseIndex(index);
+                          }}
+                          onMouseOut={() => {
+                            setMouseIndex(-1);
+                          }}
+                          onClick={() => {
+                            handleSelectionChange(index);
+                          }}
+                          onDoubleClick={() => {
+                            reCopy(histories[index]);
+                          }}
+                          style={style}
+                        >
+                          <div className="w-full flex items-center">
+                            {index < 5 && showQuickSelect && (
+                              <div className="absolute w-10 left-0 flex items-center justify-center py-2.5 pl-3 pr-5 text-white bg-[#3f4756ee] rounded-r-full text-sm animate-in slide-in-from-left duration-100">
+                                {`⌘+${index + 1}`}
+                              </div>
+                            )}
+                            {generateSummary(histories[index])}
+                          </div>
                         <div className="flex items-center">
                           {generateTags(histories[index])}
                         </div>
@@ -794,6 +821,7 @@ const Content = () => {
               </InfiniteLoader>
             )}
           </AutoSizer>
+          ) : null}
         </div>
         <div className="w-3/5 divide-y divide-gray-200">
           <div className="w-full h-2/3 relative">

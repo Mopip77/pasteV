@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { Input } from "./ui/input";
 import { Toggle } from "./ui/toggle";
-import { Regex } from "lucide-react";
+import { Brain, Regex } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -20,6 +20,8 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import { MultiSelect } from "./ui/multi-select";
+import { useSelector } from "react-redux";
+import { RootState } from "@/stores/store";
 
 const Header = () => {
   const { searchBody, setSearchBody } = useContext(SearchBodyContext);
@@ -27,6 +29,10 @@ const Header = () => {
   let compositionStart = useRef(false);
   const [tagOptions, setTagOptions] = useState<string[]>([]);
   const multiSelectRef = useRef<HTMLDivElement>(null);
+  const appConfig = useSelector((state: RootState) => state.appSettingConfig);
+
+  // 记住语义搜索前的类型，用于切换回普通模式时恢复
+  const previousTypeRef = useRef<string>("");
 
   // 类型循环顺序
   const typeOrder = ["text", "image", "file", "all"];
@@ -155,6 +161,53 @@ const Header = () => {
         }}
       />
       <div className="flex gap-1 items-start">
+        {/* 语义搜索按钮 */}
+        {appConfig.semanticSearchEnable && (
+          <TooltipProvider>
+            <Tooltip delayDuration={100}>
+              <TooltipTrigger
+                className={`${
+                  searchBody.keyword.length === 0
+                    ? "pointer-events-none cursor-default"
+                    : ""
+                }`}
+              >
+                <Toggle
+                  className={`${
+                    searchBody.keyword.length === 0 ? "opacity-0" : ""
+                  } ease-in-out duration-500 transition-opacity`}
+                  pressed={searchBody.semantic}
+                  onPressedChange={(pressed) => {
+                    if (pressed) {
+                      // 切换到语义搜索：保存当前type，设置为image
+                      previousTypeRef.current = searchBody.type;
+                      setSearchBody((prev) => ({
+                        ...prev,
+                        semantic: true,
+                        type: "image",
+                      }));
+                    } else {
+                      // 切换回普通模式：恢复之前的type
+                      setSearchBody((prev) => ({
+                        ...prev,
+                        semantic: false,
+                        type: previousTypeRef.current,
+                      }));
+                    }
+                  }}
+                >
+                  <Brain />
+                </Toggle>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="py-1.5">
+                  <span>语义搜索（仅图片）</span>
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+        {/* 正则搜索按钮 */}
         <TooltipProvider>
           <Tooltip delayDuration={100}>
             <TooltipTrigger

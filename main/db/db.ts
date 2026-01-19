@@ -33,6 +33,29 @@ class DatabaseManager {
             return new RegExp(regex, "i").test(text) ? 1 : 0;
         });
 
+        // Register cosine similarity function for semantic search
+        this.db.function('cosine_similarity', { deterministic: true },
+            (embedding1: Buffer, embedding2: Buffer) => {
+                if (!embedding1 || !embedding2) return -1;
+
+                const vec1 = new Float32Array(embedding1.buffer, embedding1.byteOffset, embedding1.byteLength / 4);
+                const vec2 = new Float32Array(embedding2.buffer, embedding2.byteOffset, embedding2.byteLength / 4);
+
+                if (vec1.length !== vec2.length) return -1;
+
+                let dotProduct = 0;
+                let norm1 = 0;
+                let norm2 = 0;
+
+                for (let i = 0; i < vec1.length; i++) {
+                    dotProduct += vec1[i] * vec2[i];
+                    norm1 += vec1[i] * vec1[i];
+                    norm2 += vec2[i] * vec2[i];
+                }
+
+                return dotProduct / (Math.sqrt(norm1) * Math.sqrt(norm2));
+            });
+
         this.db.exec(`
             CREATE TABLE IF NOT EXISTS clipboard_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,12 +91,32 @@ class DatabaseManager {
             CREATE INDEX IF NOT EXISTS idx_clipboard_history_hash_key ON tag_relation(clipboard_history_hash_key);
         `)
 
+        // add query embedding cache table for semantic search
+        this.db.exec(`
+            CREATE TABLE IF NOT EXISTS query_embedding_cache (
+                query_text TEXT PRIMARY KEY,
+                embedding BLOB NOT NULL,
+                created_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+        `)
+
         // add details column
         const columns: { name: string }[] = this.db.pragma('table_info(clipboard_history)');
         const hasDetailColumn = columns.some(column => column.name === 'details');
         if (!hasDetailColumn) {
             this.db.exec(`
                 ALTER TABLE clipboard_history ADD COLUMN details TEXT DEFAULT '{}';
+            `);
+        }
+
+        // add embedding column for semantic search
+        const hasEmbeddingColumn = columns.some(column => column.name === 'embedding');
+        if (!hasEmbeddingColumn) {
+            this.db.exec(`
+                ALTER TABLE clipboard_history ADD COLUMN embedding BLOB;
+                CREATE INDEX IF NOT EXISTS idx_embedding_exists
+                ON clipboard_history(type)
+                WHERE embedding IS NOT NULL;
             `);
         }
     }
@@ -287,6 +330,80 @@ class DatabaseManager {
         `;
 
         return this.db.prepare(sql).all([`%${filter}%`]).map(row => row.tag);
+    }
+
+    // Update embedding for a clipboard item
+    public updateClipboardHistoryEmbedding(hashKey: string, embedding: number[]) {
+        const buffer = Buffer.from(new Float32Array(embedding).buffer);
+        const sql = this.db.prepare(`
+            UPDATE clipboard_history SET embedding = ? WHERE hash_key = ?
+        `);
+        sql.run(buffer, hashKey);
+    }
+
+    // Semantic search for clipboard history
+    public semanticSearchClipboardHistory(
+        queryEmbedding: number[],
+        threshold: number,
+        limit: number
+    ): ClipboardHistoryMeta[] {
+        const buffer = Buffer.from(new Float32Array(queryEmbedding).buffer);
+
+        const sql = this.db.prepare(`
+            SELECT
+                id, type,
+                CASE
+                    WHEN LENGTH(text) > ${TEXT_TRUNCATE_THRESHOLD}
+                    THEN SUBSTR(text, 1, ${TEXT_TRUNCATE_THRESHOLD})
+                    ELSE text
+                END as text,
+                LENGTH(text) > ${TEXT_TRUNCATE_THRESHOLD} as text_truncated,
+                hash_key, create_time, last_read_time, details,
+                cosine_similarity(embedding, ?) as similarity
+            FROM clipboard_history
+            WHERE type = 'image'
+              AND embedding IS NOT NULL
+              AND cosine_similarity(embedding, ?) >= ?
+            ORDER BY similarity DESC
+            LIMIT ?
+        `);
+
+        return sql.all(buffer, buffer, threshold, limit).map(row => ({
+            id: row.id,
+            type: row.type,
+            text: row.text,
+            textTruncated: !!row.text_truncated,
+            hashKey: row.hash_key,
+            createTime: row.create_time,
+            lastReadTime: row.last_read_time,
+            details: row.details,
+        }));
+    }
+
+    // Get query embedding from cache
+    public getQueryEmbeddingCache(queryText: string): number[] | null {
+        const sql = this.db.prepare(`
+            SELECT embedding FROM query_embedding_cache WHERE query_text = ?
+        `);
+        const result = sql.get(queryText);
+
+        if (!result || !result.embedding) {
+            return null;
+        }
+
+        const buffer = result.embedding as Buffer;
+        const embedding = new Float32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / 4);
+        return Array.from(embedding);
+    }
+
+    // Save query embedding to cache
+    public setQueryEmbeddingCache(queryText: string, embedding: number[]) {
+        const buffer = Buffer.from(new Float32Array(embedding).buffer);
+        const sql = this.db.prepare(`
+            INSERT OR REPLACE INTO query_embedding_cache (query_text, embedding, created_time)
+            VALUES (?, ?, CURRENT_TIMESTAMP)
+        `);
+        sql.run(queryText, buffer);
     }
 
 }

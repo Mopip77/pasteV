@@ -22,3 +22,5 @@ mcp.json
 coverage/
 
 .claude/
+.personal/
+.personal

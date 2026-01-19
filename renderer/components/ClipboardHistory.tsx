@@ -33,6 +33,7 @@ const ClipboardHistory = () => {
     regex: false,
     type: "",
     tags: [],
+    semantic: false,
   });
 
   const [totalItems, setTotalItems] = React.useState(0);

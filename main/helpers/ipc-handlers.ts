@@ -5,6 +5,7 @@ import { exec } from "child_process"
 import log from "electron-log/main"
 import { singletons } from "main/components/singletons"
 import { CLIPBOARD_PASTE_DELAY, SHORTCUT_KEY_APP_WINDOW_TOGGLE_SHORTCUT } from "main/utils/consts"
+import { generateEmbedding } from "main/utils/ai"
 
 export const registerHandlers = (ipcMain) => {
     // app
@@ -62,4 +63,35 @@ export const registerHandlers = (ipcMain) => {
 
     // tags query
     ipcMain.handle('tags:query', (event: Event, filter: string) => singletons.db.queryTags(filter))
+
+    // Semantic search for clipboard
+    ipcMain.handle('clipboard:semanticSearch',
+        async (event: Event, query: string, threshold: number, limit: number) => {
+            try {
+                // 1. Try to get embedding from cache
+                let queryEmbedding = singletons.db.getQueryEmbeddingCache(query);
+
+                if (queryEmbedding) {
+                    log.info(`[semantic-search] Cache hit for query: "${query}"`);
+                } else {
+                    // 2. Generate query embedding if not cached
+                    log.info(`[semantic-search] Cache miss, generating embedding for query: "${query}"`);
+                    queryEmbedding = await generateEmbedding(query);
+
+                    // 3. Save to cache
+                    singletons.db.setQueryEmbeddingCache(query, queryEmbedding);
+                    log.info(`[semantic-search] Embedding cached for query: "${query}"`);
+                }
+
+                // 4. Execute semantic search
+                return singletons.db.semanticSearchClipboardHistory(
+                    queryEmbedding,
+                    threshold,
+                    limit
+                );
+            } catch (error) {
+                log.error('Semantic search failed:', error);
+                return [];
+            }
+        })
 }

@@ -51,6 +51,8 @@ const SettingsPage = () => {
         apiKey: z.string(),
         model: z.string(),
       }),
+      semanticSearchEnable: z.boolean(),
+      semanticSearchThreshold: z.coerce.number().min(0).max(1),
     })
     .superRefine((data, ctx) => {
       if (data.aiTagEnable) {
@@ -86,6 +88,8 @@ const SettingsPage = () => {
       aiTagEnable: appSettingConfig.aiTagEnable,
       imageInputType: appSettingConfig.imageInputType,
       openaiConfig: appSettingConfig.openaiConfig,
+      semanticSearchEnable: appSettingConfig.semanticSearchEnable,
+      semanticSearchThreshold: appSettingConfig.semanticSearchThreshold,
     },
   });
 
@@ -335,6 +339,51 @@ const SettingsPage = () => {
               )}
             />
           </>
+        )}
+        <FormField
+          control={form.control}
+          name="semanticSearchEnable"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">语义搜索</FormLabel>
+                <FormDescription>
+                  使用 AI 理解图片内容，支持模糊语义搜索（仅图片类型）
+                </FormDescription>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        {form.watch("semanticSearchEnable") && (
+          <FormField
+            control={form.control}
+            name="semanticSearchThreshold"
+            render={({ field }) => (
+              <FormItem className="p-2">
+                <FormLabel>语义搜索相似度阈值</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="1"
+                    placeholder="0.76"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  范围 0-1，越高越严格（推荐 0.70-0.80）
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         )}
         <div className="w-full max-w-3xl fixed bottom-20 h-4">
           <div className="w-full flex justify-around">

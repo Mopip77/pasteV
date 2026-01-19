@@ -13,7 +13,9 @@ let initialState: AppSettingConfig = {
         apiHost: "",
         apiKey: "",
         model: "",
-    }
+    },
+    semanticSearchEnable: false,
+    semanticSearchThreshold: 0.76,
 }
 
 const appSettingConfigSlice = createSlice({

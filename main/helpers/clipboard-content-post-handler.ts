@@ -2,7 +2,7 @@ import { ClipboardHisotryEntity } from "main/db/schemes";
 import { ocr } from "./ocr";
 import log from "electron-log/main";
 import { compressionPicture, readPngMetadata } from "../utils/image";
-import { chatComplectionJsonFormatted, chatComplectionWithImageJsonFormatted } from "main/utils/ai";
+import { chatComplectionJsonFormatted, chatComplectionWithImageJsonFormatted, generateEmbedding, generateImageDescription } from "main/utils/ai";
 import { PNG } from "pngjs";
 import { singletons } from "main/components/singletons";
 
@@ -28,6 +28,7 @@ export async function postHandleClipboardContent(item: ClipboardHisotryEntity) {
                 return { ocrResult, img }
             }))
             .then(({ ocrResult, img }) => aiTag(item, img, ocrResult))
+            .then(() => generateAndSaveEmbedding(item))
             .catch(err => {
                 log.error(`[post-handler] {${item.hashKey}} Error=${err}`);
             })
@@ -66,13 +67,13 @@ async function aiTag(item: ClipboardHisotryEntity, img: PNG, ocrResult: string) 
             const ocrPrompt = `
             ## 目标
             请用最多三个词来描述这张图片，这些词应该是有关这张图片的主题的。
-        
+
             ## 要求
             - 以 json 格式输出一个字符串数组
             - 最多输出三个词
             - 三个词尽量不相关
             - 如果输入内容过少，可以输出空数组
-        
+
             ## 例子
             1. {"tags": ["对话", "天气", "风景"]}
             2. {"tags": []}
@@ -84,7 +85,7 @@ async function aiTag(item: ClipboardHisotryEntity, img: PNG, ocrResult: string) 
         const ocrPrompt = `
     ## 背景
     这是一张图片通过 ocr 识别的文本，你可以猜测这是什么图片，或者这张图片的主题是什么？
-    
+
     ## 目标
     请用最多三个词来描述这张图片，这些词应该是有关这张图片的主题的。
 
@@ -118,5 +119,42 @@ async function aiTag(item: ClipboardHisotryEntity, img: PNG, ocrResult: string) 
         })
         singletons.db.updateClipboardHistoryDetails(item.hashKey, item.details)
         singletons.db.insertTagRelation(item.hashKey, aiResponseJson.tags)
+    }
+}
+
+// Generate and save embedding for semantic search
+async function generateAndSaveEmbedding(item: ClipboardHisotryEntity) {
+    const config = singletons.settings.loadConfig();
+
+    // Check if semantic search is enabled
+    if (!config?.semanticSearchEnable || !config?.openaiConfig) {
+        log.info(`[post-handler] {${item.hashKey}} Semantic search disabled, skip embedding`);
+        return;
+    }
+
+    if (item.type !== 'image') {
+        return;
+    }
+
+    try {
+        log.info(`[post-handler] {${item.hashKey}} Generating embedding`);
+
+        // 1. Generate image description
+        const description = await generateImageDescription(item.text, item.blob);
+        log.info(`[post-handler] {${item.hashKey}} Image description: ${description.substring(0, 100)}...`);
+
+        // 2. Combine OCR text + image description
+        const combinedText = `${item.text}\n\n${description}`;
+
+        // 3. Generate embedding
+        const embedding = await generateEmbedding(combinedText);
+        log.info(`[post-handler] {${item.hashKey}} Embedding generated, dimension: ${embedding.length}`);
+
+        // 4. Save to database
+        singletons.db.updateClipboardHistoryEmbedding(item.hashKey, embedding);
+        log.info(`[post-handler] {${item.hashKey}} Embedding saved`);
+
+    } catch (err) {
+        log.error(`[post-handler] {${item.hashKey}} Embedding generation failed: ${err}`);
     }
 }
